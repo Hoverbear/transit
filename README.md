@@ -10,6 +10,17 @@
 
 ### Methodology
 
-This tool will attempt to do the following things:
+Given a functioning Git repo this tool will attempt to do the following things:
 
-1. 
+1. Analyze each diff.
+2. Attempt to match any deletions with any additions which match the same *signature* of code. This would correspond to a 'code move'.
+3. Ideally, this program would be able to account for relevant variable name changes without failing to detect the move.
+
+### Codebases to Analyze
+
+I'll be using it on a few codebases including [Rust](github.com/rust-lang/rust), [Servo](https://github.com/servo/servo), and my own project [Gathering Our Voices](https://github.com/BCAAFC/Gathering-Our-Voices).
+
+### Milestones
+
+Febuary 23 - Hand in.
+
