@@ -31,7 +31,7 @@ fn main() {
     let repo = Repository::discover(&path)
         .ok().expect("Could not discover a repository.");
     let branch = match args.arg_branch {
-        Some(branch) => repo.find_branch(branch.as_slice(), BranchType::Local),
+        Some(branch) => repo.find_branch(&branch[], BranchType::Local),
         None => choose_branch(&repo),
     }.ok().expect("Could not get branch.");
     println!("Repo: {:?}, Branch: {:?}", path, branch.name()
@@ -42,14 +42,15 @@ fn choose_branch(repo: &Repository) -> Result<Branch, git2::Error> {
     println!("Please choose a branch:");
     let mut branches = repo.branches(Some(BranchType::Local))
         .ok().expect("Could find any branches.");
-    for (branch, variant) in branches {
+    for (branch, _) in branches {
         let name = branch.name()
             .ok().expect("Could not get branch name.")
             .expect("Branch name was not valid UTF-8");
-        println!("{:?}", name);
+        println!("{}", name);
     }
-    let chosen = io::stdin().lock().read_to_string()
+    io::stdout().write_str(&"Choose your branch: "[]);
+    let chosen = io::stdin().lock().read_line()
         .ok().expect("Could not read from stdin");
-    repo.find_branch(chosen.as_slice(), BranchType::Local)
+    repo.find_branch(&chosen.trim()[], BranchType::Local)
 }
 
