@@ -24,3 +24,8 @@ I'll be using it on a few codebases including [Rust](github.com/rust-lang/rust),
 
 Febuary 23 - Hand in.
 
+### Resources
+
+* [git2 library](http://alexcrichton.com/git2-rs/git2/index.html)
+* [Rust Book](http://doc.rust-lang.org/book/)
+* [Rust Docs](http://doc.rust-lang.org/std/index.html)
