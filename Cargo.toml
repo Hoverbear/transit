@@ -7,8 +7,12 @@ authors = [
   "Brody Holden <brody.holden.r@gmail.com>",
   "Fraser D <fmd@uvic.ca>",
 ]
-
+# Crates.io dependencies
 [dependencies]
-git2 = "*"
-docopt = "*"
 rustc-serialize = "*" 
+
+# github based dependencies (Because Crates.io isn't always up to date)
+[dependencies.git2]
+git = "https://github.com/alexcrichton/git2-rs"
+[dependencies.docopt]
+git = "https://github.com/docopt/docopt.rs"
