@@ -1,0 +1,14 @@
+[package]
+
+name = "transit"
+version = "0.0.1"
+authors = [
+  "Andrew Hobden <andrew@hoverbear.org>",
+  "Brody Holden <brody.holden.r@gmail.com>",
+  "Fraser D <fmd@uvic.ca>",
+]
+
+[dependencies]
+git2 = "*"
+docopt = "*"
+rustc-serialize = "*" 
