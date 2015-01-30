@@ -29,3 +29,5 @@ Febuary 23 - Hand in.
 * [git2 library](http://alexcrichton.com/git2-rs/git2/index.html)
 * [Rust Book](http://doc.rust-lang.org/book/)
 * [Rust Docs](http://doc.rust-lang.org/std/index.html)
+* [Using Git Diff to detect Code Merges](http://stackoverflow.com/a/12805390)
+* [Linus on tracking moves in Git](http://article.gmane.org/gmane.comp.version-control.git/217)
