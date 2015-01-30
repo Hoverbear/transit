@@ -30,12 +30,23 @@ fn main() {
     let path = Path::new(args.arg_repo);
     let repo = Repository::discover(&path)
         .ok().expect("Could not discover a repository.");
+
+    // Which branch?
     let branch = match args.arg_branch {
         Some(branch) => repo.find_branch(&branch[], BranchType::Local),
         None => choose_branch(&repo),
     }.ok().expect("Could not get branch.");
+
+    // Mostly debugging.
     println!("Repo: {:?}, Branch: {:?}", path, branch.name()
-        .ok().expect("Branch name was not valid UTF-8"));
+       .ok().expect("Couldn't get branch name.")
+       .expect("Branch name is not UTF-8."));
+
+    // Get the reference of the branch.
+    let reference = branch.into_reference();
+    let oid = reference.target()
+        .expect("Could not get target.");
+    println!("Target Commit: {:?}", oid);
 }
 
 fn choose_branch(repo: &Repository) -> Result<Branch, git2::Error> {
@@ -53,4 +64,3 @@ fn choose_branch(repo: &Repository) -> Result<Branch, git2::Error> {
         .ok().expect("Could not read from stdin");
     repo.find_branch(&chosen.trim()[], BranchType::Local)
 }
-
