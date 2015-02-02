@@ -58,7 +58,6 @@ fn main() {
     for commit in top_commit.parents() {
         println!("Parent: {:?}, {:?}", commit.id(), commit.message()
             .expect("Could not get commit message"));
-
     }
 }
 
@@ -70,7 +69,7 @@ fn choose_branch(repo: &Repository) -> Result<Branch, git2::Error> {
         let name = branch.name()
             .ok().expect("Could not get branch name.")
             .expect("Branch name was not valid UTF-8");
-        println!("{}", name);
+        println!("  {}", name);
     }
     io::stdout().write_str(&"Choose your branch: "[]);
     let chosen = io::stdin().lock().read_line()

@@ -32,3 +32,4 @@ Febuary 23 - Hand in.
 * [Using Git Diff to detect Code Merges](http://stackoverflow.com/a/12805390)
 * [Linus on tracking moves in Git](http://article.gmane.org/gmane.comp.version-control.git/217)
 * [Content Tracking](https://gitster.livejournal.com/35628.html)
+* [Git Revwalk](http://ben.straub.cc/2013/10/02/revwalk/)
