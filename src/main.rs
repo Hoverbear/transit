@@ -1,3 +1,6 @@
+#![feature(io)]
+#![feature(core)]
+#![feature(path)]
 extern crate git2;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
@@ -14,7 +17,7 @@ Options:
     -f, --flag  Flags a flag, note the multiple spaces!
 ";
 
-#[derive(RustcDecodable, Show)]
+#[derive(RustcDecodable, Debug)]
 struct Args {
     arg_repo: String,
     arg_branch: Option<String>,
@@ -47,6 +50,16 @@ fn main() {
     let oid = reference.target()
         .expect("Could not get target.");
     println!("Target Commit: {:?}", oid);
+
+    let top_commit = repo.find_commit(oid)
+        .ok().expect("Could not get commit.");
+
+    // There might be more than one parent of a commit... Hrm...
+    for commit in top_commit.parents() {
+        println!("Parent: {:?}, {:?}", commit.id(), commit.message()
+            .expect("Could not get commit message"));
+
+    }
 }
 
 fn choose_branch(repo: &Repository) -> Result<Branch, git2::Error> {
