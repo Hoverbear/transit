@@ -1,17 +1,19 @@
-#![feature(io)]
 #![feature(core)]
 #![feature(path)]
 extern crate git2;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
 
-use git2::{Repository, Branch, BranchType};
+use git2::{Repository, Branch, BranchType, Commit, Diff};
 use docopt::Docopt;
 use std::old_io as io;
+use std::old_io::BufferedReader;
+use std::old_io::File;
+use std::str;
 
 // Write the Docopt usage string.
 static USAGE: &'static str = "
-Usage: transit [options] <repo> [<branch>]
+Usage: transit [options] <repo>
 
 Options:
     -f, --flag  Flags a flag, note the multiple spaces!
@@ -20,7 +22,6 @@ Options:
 #[derive(RustcDecodable, Debug)]
 struct Args {
     arg_repo: String,
-    arg_branch: Option<String>,
     flag_flag: bool,
 }
 
@@ -44,12 +45,32 @@ fn main() {
     // Push HEAD to the revwalk.
     revwalk.push_head()
         .ok().expect("Unable to push HEAD.");
-    for id in revwalk {
-        match repo.find_commit(id) {
-            Ok(commit) =>
-                println!("Commit: {:?} - {:?}", commit.id(), commit.message()
-                    .expect("Commit message was not UTF-8.")),
-            Err(error) => (),
+    // We sadly must collect here to use `.windows()`
+    let history = revwalk.filter_map(|id| repo.find_commit(id).ok())
+        .collect::<Vec<Commit>>();
+    for pair in history.windows(2) {
+        let (prev, next) = (&pair[0], &pair[1]);
+        println!("\n{:?} - {:?}\n", prev.id(), next.id());
+        let prev_tree = prev.tree()
+            .ok().expect("Couldn't get prev tree");
+        let next_tree = next.tree()
+            .ok().expect("Couldn't get next tree.");
+        let diff = Diff::tree_to_tree(&repo, Some(&prev_tree), Some(&next_tree), None)
+            .ok().expect("Couldn't diff trees.");
+        for delta in diff.deltas() {
+            let old_file = repo.find_blob(delta.old_file().id())
+                .ok().expect("Couldn't get blob");
+            let new_file = repo.find_blob(delta.new_file().id())
+                .ok().expect("Couldn't get blob");
+            let old_content = str::from_utf8(&mut old_file.content())
+                .ok().expect("Couldn't get content");
+            let new_content = str::from_utf8(&mut new_file.content())
+                .ok().expect("Couldn't get content");
+            for (old, new) in old_content.lines().zip(new_content.lines()) {
+                if (old != new) {
+                    println!("{:?} - {:?}", old, new);
+                } else { println!("Same"); }
+            }
         }
     }
 }
