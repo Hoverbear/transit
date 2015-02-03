@@ -18,11 +18,21 @@ Given a functioning Git repo this tool will attempt to do the following things:
 
 ### Codebases to Analyze
 
-I'll be using it on a few codebases including [Rust](github.com/rust-lang/rust), [Servo](https://github.com/servo/servo), and my own project [Gathering Our Voices](https://github.com/BCAAFC/Gathering-Our-Voices).
+We will be using it on a few codebases including [Rust](github.com/rust-lang/rust), [Servo](https://github.com/servo/servo), [Gathering Our Voices](https://github.com/BCAAFC/Gathering-Our-Voices), [socket.io](http://socket.io/), [connect](https://github.com/senchalabs/connect).
 
 ### Milestones
 
-Febuary 23 - Hand in.
+Date | Milestone
+----------- | ----------
+February 3 | Initial prototype of project system
+February 10 | Well-defined project output
+February 12 | Feature freeze
+February 16 | Complete refactor identification functionality
+February 17 | Complete testing & release version 1.0
+February 20 | Complete analysis of target codebases
+February 21 | Document findings
+February 22 | Finalized report
+February 23 | Submit final project
 
 ### Resources
 
