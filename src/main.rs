@@ -33,7 +33,7 @@ fn main() {
     // Pull up the revwalk.
     let path = Path::new(args.arg_repo);
     let repo = Repository::discover(&path)
-        .ok().expect("Could not discover a repository.");
+        .ok().expect("Unable to find repo.");
     let mut revwalk = repo.revwalk()
         .ok().expect("Unable to get revwalk.");
     // Setup some options.
@@ -48,28 +48,38 @@ fn main() {
     // We sadly must collect here to use `.windows()`
     let history = revwalk.filter_map(|id| repo.find_commit(id).ok())
         .collect::<Vec<Commit>>();
+    // Walk through each pair of commits.
     for pair in history.windows(2) {
-        let (prev, next) = (&pair[0], &pair[1]);
-        println!("\n{:?} - {:?}\n", prev.id(), next.id());
-        let prev_tree = prev.tree()
-            .ok().expect("Couldn't get prev tree");
-        let next_tree = next.tree()
-            .ok().expect("Couldn't get next tree.");
-        let diff = Diff::tree_to_tree(&repo, Some(&prev_tree), Some(&next_tree), None)
+        let (old, new) = (&pair[1], &pair[0]);
+        println!("\nOLD: {:?} - NEW: {:?}\n", old.id(), new.id());
+        let old_tree = old.tree()
+            .ok().expect("Could not get tree.");
+        let new_tree = new.tree()
+            .ok().expect("Could not get tree.");
+        // Build up a diff of the two trees.
+        let diff = Diff::tree_to_tree(&repo, Some(&old_tree), Some(&new_tree), None)
             .ok().expect("Couldn't diff trees.");
+
         for delta in diff.deltas() {
-            let old_file = repo.find_blob(delta.old_file().id())
-                .ok().expect("Couldn't get blob");
-            let new_file = repo.find_blob(delta.new_file().id())
-                .ok().expect("Couldn't get blob");
-            let old_content = str::from_utf8(&mut old_file.content())
-                .ok().expect("Couldn't get content");
-            let new_content = str::from_utf8(&mut new_file.content())
-                .ok().expect("Couldn't get content");
+            // If we don't get anything the file was probably newly created.
+            let old_file = repo.find_blob(delta.old_file().id());
+            let old_content = match old_file {
+                Ok(ref file) => str::from_utf8(file.content()).unwrap(),
+                Err(e)   => "".as_slice(),
+            };
+            // If we don't get anything the file was probably newly deleted.
+            let new_file = repo.find_blob(delta.new_file().id());
+            let new_content = match new_file {
+                Ok(ref file) => str::from_utf8(file.content()).unwrap(),
+                Err(e)   => "".as_slice(),
+            };
             for (old, new) in old_content.lines().zip(new_content.lines()) {
-                if (old != new) {
-                    println!("{:?} - {:?}", old, new);
-                } else { println!("Same"); }
+                if old != new {
+                    println!("--- {}\n+++ {}", old, new);
+                } else {
+                    println!("{}", new);
+                }
+                // Note that this zipped iter ends when ONE ends, and won't show all.
             }
         }
     }
