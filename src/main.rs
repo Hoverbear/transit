@@ -1,10 +1,12 @@
 #![feature(core)]
 #![feature(path)]
+
 extern crate git2;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
 
-use git2::{Repository, Branch, BranchType, Commit, Diff};
+use git2::{Repository, Branch, BranchType, DiffLine,
+    Commit, Diff, DiffFormat, DiffDelta, DiffHunk};
 use docopt::Docopt;
 use std::old_io as io;
 use std::old_io::BufferedReader;
@@ -13,16 +15,12 @@ use std::str;
 
 // Write the Docopt usage string.
 static USAGE: &'static str = "
-Usage: transit [options] <repo>
-
-Options:
-    -f, --flag  Flags a flag, note the multiple spaces!
+Usage: transit <repo>
 ";
 
 #[derive(RustcDecodable, Debug)]
 struct Args {
     arg_repo: String,
-    flag_flag: bool,
 }
 
 fn main() {
@@ -59,28 +57,11 @@ fn main() {
         // Build up a diff of the two trees.
         let diff = Diff::tree_to_tree(&repo, Some(&old_tree), Some(&new_tree), None)
             .ok().expect("Couldn't diff trees.");
-
-        for delta in diff.deltas() {
-            // If we don't get anything the file was probably newly created.
-            let old_file = repo.find_blob(delta.old_file().id());
-            let old_content = match old_file {
-                Ok(ref file) => str::from_utf8(file.content()).unwrap(),
-                Err(e)   => "".as_slice(),
-            };
-            // If we don't get anything the file was probably newly deleted.
-            let new_file = repo.find_blob(delta.new_file().id());
-            let new_content = match new_file {
-                Ok(ref file) => str::from_utf8(file.content()).unwrap(),
-                Err(e)   => "".as_slice(),
-            };
-            for (old, new) in old_content.lines().zip(new_content.lines()) {
-                if old != new {
-                    println!("--- {}\n+++ {}", old, new);
-                } else {
-                    println!("{}", new);
-                }
-                // Note that this zipped iter ends when ONE ends, and won't show all.
-            }
-        }
+        diff.print(DiffFormat::Patch, handler);
     }
+}
+
+fn handler(delta: DiffDelta, hunk: Option<DiffHunk>, line: DiffLine) -> bool {
+    println!("----\n{}----\n", str::from_utf8(line.content()).unwrap());
+    true
 }
