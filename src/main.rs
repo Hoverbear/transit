@@ -61,7 +61,9 @@ fn main() {
     }
 }
 
+// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
+// It's a bit weird, but I think it will provide the necessary information.
 fn handler(delta: DiffDelta, hunk: Option<DiffHunk>, line: DiffLine) -> bool {
     println!("----\n{}----\n", str::from_utf8(line.content()).unwrap());
-    true
+    false
 }
