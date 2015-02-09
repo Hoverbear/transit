@@ -12,3 +12,4 @@ authors = [
 rustc-serialize = "*"
 docopt = "*"
 git2 = "*"
+regex = "*"
