@@ -64,66 +64,73 @@ fn main() {
         let history = revwalk.filter_map(|id| repo.find_commit(id).ok())
             .collect::<Vec<Commit>>();
         // Walk through each pair of commits.
-        for pair in history.windows(2) {
-            let (old, new) = (&pair[1], &pair[0]);
-            find_moves(&repo, old.clone(), new.clone()).unwrap();
-        }
-    }
-
-
-fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
-        let old_tree = try!(old.tree());
-        let new_tree = try!(new.tree());
-        // Build up a diff of the two trees.
-        let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
-        // State. TODO: Don't just use a u64.
-        let moved = 0;
-        let mut current_hunk: Vec<String> = Vec::new();
-        // Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
-        // It's a bit weird, but I think it will provide the necessary information.
-        diff.print(DiffFormat::Patch, |delta, maybe_hunk, line| -> bool {
-            // Thinking:
-            //  * If is not a hunk, keep going.
-            //  * If it's a hunk, do regex magic.
-            //  * Stick regex output into a hashmap as a hash.
-            //  * Later, we will iterate through and output pased on the values.
-            // Filter out all the boring context lines.
-            // If we're not interested in this line just return since it will iterate to the next.
-            if maybe_hunk.is_none() { return true }; // Return early.
-            match line.origin() {
-                // Context
-                ' ' | '=' => true,
-                // Headers
-                'F' | 'H' => true,
-                // Additions
-                '+' | '>' => {
-                    println!("+ {}", str::from_utf8(line.content()).unwrap());
-                    true
-                },
-                // Deletions
-                '-' | '<' => {
-                    println!("- {}", str::from_utf8(line.content()).unwrap());
-                    true
-                },
-                // Other (We don't care about these.)
-                _         => true,
-            }
-                // Look at that match statement, what a hunk. So hunky.
-                // match maybe_hunk {
-                //     Some(hunk) => unimplemented!(),
-                //     None => unimplemented!(),
-                // }
-        });
-        Ok(vec![Output {
-            old_commit: old.id(),
-            new_commit: new.id(),
-            origin_line: 0,
-            destination_line: 0,
-            num_lines: 0
-        }])
-    }
+        for pair in history.windows(2) {let (old, new) = (&pair[1], &pair[0]);
+			let output = find_moves(&repo, old.clone(), new.clone()).unwrap();
+			// mangle the vectors here to make pretty output
+			make_output(output);
+		}
+	}
 }
 
+fn make_output(output: Vec<Output>) {
+	println!("some json output");
+
+}
+
+fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
+	let old_tree = try!(old.tree());
+	let new_tree = try!(new.tree());
+	// Build up a diff of the two trees.
+	let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
+	// State. TODO: Don't just use a u64.
+	let moved = 0;
+	let mut current_hunk: Vec<String> = Vec::new();
+	// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
+	// It's a bit weird, but I think it will provide the necessary information.
+	diff.print(DiffFormat::Patch, |delta, maybe_hunk, line| -> bool {
+		// Thinking:
+		//  * If is not a hunk, keep going.
+		//  * If it's a hunk, do regex magic.
+		//  * Stick regex output into a hashmap as a hash.
+		//  * Later, we will iterate through and output pased on the values.
+		// Filter out all the boring context lines.
+		// If we're not interested in this line just return since it will iterate to the next.
+		if maybe_hunk.is_none() { return true }; // Return early.
+		match line.origin() {
+			// Context
+			' ' | '=' => true,
+			// Headers
+			'F' | 'H' => true,
+			// Additions
+			'+' | '>' => {
+				println!("+ {}", str::from_utf8(line.content()).unwrap());
+				true
+			},
+			// Deletions
+			'-' | '<' => {
+				println!("- {}", str::from_utf8(line.content()).unwrap());
+				true
+			},
+			// Other (We don't care about these.)
+			_         => true,
+		}
+			// Look at that match statement, what a hunk. So hunky.
+			// match maybe_hunk {
+			//     Some(hunk) => unimplemented!(),
+			//     None => unimplemented!(),
+			// }
+	});
+	Ok(vec![Output {
+		old_commit: old.id(),
+		new_commit: new.id(),
+		origin_line: 0,
+		destination_line: 0,
+		num_lines: 0
+	}])
+}
+
+	
+#[derive[Show]]	
 struct Output {
     old_commit: Oid,
     new_commit: Oid,
