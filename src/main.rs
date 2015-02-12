@@ -130,7 +130,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 }
 
 	
-#[derive[Show]]	
+#[derive(Show)]	
 struct Output {
     old_commit: Oid,
     new_commit: Oid,
