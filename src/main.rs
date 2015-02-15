@@ -85,8 +85,7 @@ fn make_output(output: Vec<Output>) {
     }
 }
 
-
-fn print_or_none(s: &str, opt: Option<u32>) {
+fn print_or_none<T: std::fmt::Display> (s: &str, opt: Option<T>) {
     print!("{}=", s);
     match opt {
         Some(value) => println!("{}", value),
