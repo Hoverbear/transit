@@ -207,6 +207,8 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
     Ok(vec![Output {
 	    old_commit: old.id(),
 	    new_commit: new.id(),
+        old_filename: String::from_str("oldfilename"),
+        new_filename: String::from_str("newfilename"),
 	    origin_line: 0,
 	    destination_line: 0,
 	    num_lines: 0
@@ -218,6 +220,8 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 struct Output {
     old_commit: Oid,
     new_commit: Oid,
+    old_filename: String,
+    new_filename: String,
     origin_line: u32,
     destination_line: u32,
     num_lines: u32,
