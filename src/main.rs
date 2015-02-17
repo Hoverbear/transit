@@ -114,13 +114,10 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 		// If we're not interested in this line just return since it will iterate to the next.
 		if maybe_hunk.is_none() { return true }; // Return early.
 
-        println!("");
-        println!("line.old_lineno()={:?}", line.old_lineno());
-        println!("line.new_lineno()={:?}", line.new_lineno());
-        println!("line.num_lines()={}",  line.num_lines());
-        println!("line.content_offset={}", line.content_offset());
-        println!("|line.origin()|=|{}|", line.origin());  // Wrap in |'s to detect space characters.
-        print!("line.content()={}", str::from_utf8(line.content()).unwrap());
+        // 'origin' is wrapped in pipes to ease displaying space characters.
+        print!("line: old={:?} new={:?} offset={} |origin|=|{}|\n      content={}",
+                 line.old_lineno(), line.new_lineno(), line.content_offset(),
+                 line.origin(), str::from_utf8(line.content()).unwrap());
 
         println!("delta.nfiles()={}", delta.nfiles());
         println!("delta.status()={:?}", delta.status());    // :? is for debug trait.
