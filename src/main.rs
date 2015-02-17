@@ -131,6 +131,9 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
     let mut state = State::Other;
     let mut added = String::new();
     let mut deleted = String::new();
+    let mut old_path: Path = Path::new("");
+    let mut new_path: Path = Path::new("");
+
 
     let mut keys: Vec<String> = Vec::new();  // TODO Will become hashmap.
 
@@ -152,7 +155,8 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 		if maybe_hunk.is_none() { return true }; // Return early.
 
         //println!("top of loop: keys={:?}", keys);
-        //println!("top of loop: added={:?} deleted={:?}", added, deleted);
+        println!("top of loop: founds={:?}", founds);
+        println!("top of loop: added={:?} deleted={:?}", added, deleted);
 
         // 'origin' is wrapped in pipes to ease displaying space characters.
         print!("line: old={:?} new={:?} offset={} |origin|=|{}|\n      content={}",
@@ -160,6 +164,9 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                  line.origin(), str::from_utf8(line.content()).unwrap());
 
         //dump_diffdelta(&delta);
+
+        old_path = delta.old_file().path().unwrap().clone();
+        new_path = delta.new_file().path().unwrap().clone();
 
 		match line.origin() {
 			// Additions
@@ -233,6 +240,29 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
             }
 		}
 	});
+
+    // Grab one.
+    match state {
+        State::Addition => {
+            if added.len() > 0 {
+                founds.push(Found {
+                    filename: new_path,
+                    key: format_key(added.clone()),
+                    state: FoundState::Added,
+                });
+            }
+        },
+        State::Deletion => {
+            if deleted.len() > 0 {
+                founds.push(Found {
+                    filename: old_path,
+                    key: format_key(deleted.clone()),
+                    state: FoundState::Deleted,
+                });
+            }
+        },
+        _ => (),
+    }
 
     println!("KEYS={:?}", keys);
     println!("FOUNDS={:?}", founds);
