@@ -95,7 +95,12 @@ enum State {
     Other, Addition, Deletion
 }
 
-fn dump_diffdelta(delta: DiffDelta) {
+#[derive(Debug)]
+enum FoundState {
+    Added, Deleted
+}
+
+fn dump_diffdelta(delta: &DiffDelta) {
     println!("delta: nfiles={} status={:?} old_file=(id={} path_bytes={:?} path={:?} tsize={}) new_file=(id={} path_bytes={:?} path={:?} tsize={})",
             delta.nfiles(), delta.status(),
             delta.old_file().id(), delta.old_file().path_bytes(), delta.old_file().path(), delta.old_file().size(),
@@ -105,6 +110,13 @@ fn dump_diffdelta(delta: DiffDelta) {
 fn format_key(key: String) -> String {
     let removeWhiteSpace = regex!(r"\s{2,}"); // 2 or more whitespaces    // TODO Removes whitespace from a string.
     removeWhiteSpace.replace_all(key.as_slice(), "")
+}
+
+#[derive(Debug)]
+struct Found {
+    filename: Path,
+    key: String,
+    state: FoundState,
 }
 
 fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
@@ -122,9 +134,14 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
     let mut keys: Vec<String> = Vec::new();  // TODO Will become hashmap.
 
+    let mut founds: Vec<Found> = Vec::new();
+
 	// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
 	// It's a bit weird, but I think it will provide the necessary information.
 	diff.print(DiffFormat::Patch, |delta, maybe_hunk, line| -> bool {
+
+        // Have not defined behaviour for number of files != 2.
+        assert!(delta.nfiles() == 2);
 
 		// Thinking:
 		//  * If is not a hunk, keep going.
@@ -135,15 +152,15 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 		// If we're not interested in this line just return since it will iterate to the next.
 		if maybe_hunk.is_none() { return true }; // Return early.
 
-        println!("top of loop: keys={:?}", keys);
-        println!("top of loop: added={:?} deleted={:?}", added, deleted);
+        //println!("top of loop: keys={:?}", keys);
+        //println!("top of loop: added={:?} deleted={:?}", added, deleted);
 
         // 'origin' is wrapped in pipes to ease displaying space characters.
         print!("line: old={:?} new={:?} offset={} |origin|=|{}|\n      content={}",
                  line.old_lineno(), line.new_lineno(), line.content_offset(),
                  line.origin(), str::from_utf8(line.content()).unwrap());
 
-        //dump_diffdelta(delta);
+        //dump_diffdelta(&delta);
 
 		match line.origin() {
 			// Additions
@@ -154,7 +171,11 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
                 match state {
                     State::Deletion => {
-                        keys.push(format_key(deleted.clone()));
+                        founds.push(Found {
+                            filename: delta.old_file().path().unwrap().clone(),
+                            key: format_key(deleted.clone()),
+                            state: FoundState::Deleted,
+                        });
                         deleted = String::new();
                     },
                     _ => (),
@@ -171,7 +192,11 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
                 match state {
                     State::Addition => {
-                        keys.push(format_key(added.clone()));
+                        founds.push(Found {
+                            filename: delta.new_file().path().unwrap().clone(),
+                            key: format_key(added.clone()),
+                            state: FoundState::Added,
+                        });
                         added = String::new();
                     },
                     _ => (),
@@ -186,14 +211,22 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
                 match state {
                     State::Addition => {
-                        keys.push(format_key(added.clone()));
+                        founds.push(Found {
+                            filename: delta.new_file().path().unwrap().clone(),
+                            key: format_key(added.clone()),
+                            state: FoundState::Added,
+                        });
                         added = String::new();
                     },
                     State::Deletion => {
-                        keys.push(format_key(deleted.clone()));
+                        founds.push(Found {
+                            filename: delta.old_file().path().unwrap().clone(),
+                            key: format_key(deleted.clone()),
+                            state: FoundState::Deleted,
+                        });
                         deleted = String::new();
                     },
-                    State::Other => (),
+                    _ => (),
                 }
 
                 state = State::Other;
@@ -203,6 +236,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 	});
 
     println!("KEYS={:?}", keys);
+    println!("FOUNDS={:?}", founds);
 
     Ok(vec![Output {
 	    old_commit: old.id(),
