@@ -141,9 +141,6 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
     let mut old_path: Path = Path::new("");
     let mut new_path: Path = Path::new("");
 
-
-    let mut keys: Vec<String> = Vec::new();  // TODO Will become hashmap.
-
     let mut founds: Vec<Found> = Vec::new();
 
 	// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
@@ -161,7 +158,6 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 		// If we're not interested in this line just return since it will iterate to the next.
 		if maybe_hunk.is_none() { return true }; // Return early.
 
-        //println!("top of loop: keys={:?}", keys);
         println!("top of loop: founds={:?}", founds);
         println!("top of loop: added={:?} deleted={:?}", added, deleted);
 
@@ -267,7 +263,6 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
         _ => (),
     }
 
-    println!("KEYS={:?}", keys);
     println!("FOUNDS={:?}", founds);
 
     Ok(vec![Output {
