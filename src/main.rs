@@ -178,7 +178,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                 match state {
                     State::Deletion => {
                         founds.push(Found {
-                            filename: delta.old_file().path().unwrap().clone(),
+                            filename: old_path.clone(),
                             key: format_key(deleted.clone()),
                             state: FoundState::Deleted,
                         });
@@ -199,7 +199,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                 match state {
                     State::Addition => {
                         founds.push(Found {
-                            filename: delta.new_file().path().unwrap().clone(),
+                            filename: new_path.clone(),
                             key: format_key(added.clone()),
                             state: FoundState::Added,
                         });
@@ -218,7 +218,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                 match state {
                     State::Addition => {
                         founds.push(Found {
-                            filename: delta.new_file().path().unwrap().clone(),
+                            filename: new_path.clone(),
                             key: format_key(added.clone()),
                             state: FoundState::Added,
                         });
@@ -226,7 +226,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                     },
                     State::Deletion => {
                         founds.push(Found {
-                            filename: delta.old_file().path().unwrap().clone(),
+                            filename: old_path.clone(),
                             key: format_key(deleted.clone()),
                             state: FoundState::Deleted,
                         });
