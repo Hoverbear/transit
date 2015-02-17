@@ -100,6 +100,13 @@ enum FoundState {
     Added, Deleted
 }
 
+fn dump_diffline(line: &DiffLine) {
+    // 'origin' is wrapped in pipes to ease displaying space characters.
+    print!("line: old={:?} new={:?} offset={} |origin|=|{}|\n      content={}",
+             line.old_lineno(), line.new_lineno(), line.content_offset(),
+             line.origin(), str::from_utf8(line.content()).unwrap());
+}
+
 fn dump_diffdelta(delta: &DiffDelta) {
     println!("delta: nfiles={} status={:?} old_file=(id={} path_bytes={:?} path={:?} tsize={}) new_file=(id={} path_bytes={:?} path={:?} tsize={})",
             delta.nfiles(), delta.status(),
@@ -158,11 +165,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
         println!("top of loop: founds={:?}", founds);
         println!("top of loop: added={:?} deleted={:?}", added, deleted);
 
-        // 'origin' is wrapped in pipes to ease displaying space characters.
-        print!("line: old={:?} new={:?} offset={} |origin|=|{}|\n      content={}",
-                 line.old_lineno(), line.new_lineno(), line.content_offset(),
-                 line.origin(), str::from_utf8(line.content()).unwrap());
-
+        dump_diffline(&line);
         //dump_diffdelta(&delta);
 
         old_path = delta.old_file().path().unwrap().clone();
