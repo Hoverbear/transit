@@ -126,8 +126,6 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
     let mut state = State::Other;
     let mut added = String::new();
     let mut deleted = String::new();
-    let mut has_addition = false;
-    let mut has_deletion = false;
 
     let mut keys: Vec<String> = Vec::new();  // TODO Will become hashmap.
 
@@ -174,12 +172,9 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
             */
 			// Additions
 			'+' | '>' => {
-				print!("+ {}", str::from_utf8(line.content()).unwrap());
+                println!("In additions. state={:?}", state);
 
                 added.push_str(str::from_utf8(line.content()).unwrap());
-                has_addition = true;
-
-                println!("In additions. state={:?}", state);
 
                 match state {
                     State::Deletion => {
@@ -194,12 +189,9 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 			},
 			// Deletions
 			'-' | '<' => {
-				print!("- {}", str::from_utf8(line.content()).unwrap());
+                println!("In deletion. state={:?}", state);
 
                 deleted.push_str(str::from_utf8(line.content()).unwrap());
-                has_deletion = true;
-
-                println!("In deletion. state={:?}", state);
 
                 match state {
                     State::Addition => {
@@ -214,8 +206,6 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 			},
 			// Other (We don't care about these.)
 			_         => {
-                print!("_ {}", str::from_utf8(line.content()).unwrap());
-
                 println!("in _. state={:?}", state);
 
                 match state {
@@ -242,37 +232,15 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 			// }
 	});
 
-
-    println!("\nhas_addition={}, has_deletion={}", has_addition, has_deletion);
     println!("KEYS={:?}", keys);
-   // if has_addition && has_deletion {
-/*
-        results.push(Output {
-		    old_commit: old.id(),
-		    new_commit: new.id(),
-		    origin_line: 0,
-		    destination_line: 0,
-		    num_lines: 0
-        });
-*/
-    //}
 
-
-    if !has_addition || !has_deletion {
-        println!("Does not have addition or deletion.");
-        Ok(vec![])  // Return empty vector.
-    } else {
-
-	    Ok(vec![Output {
-		    old_commit: old.id(),
-		    new_commit: new.id(),
-		    origin_line: 0,
-		    destination_line: 0,
-		    num_lines: 0
-	    }])
-    }
-
-   // Ok(results)
+    Ok(vec![Output {
+	    old_commit: old.id(),
+	    new_commit: new.id(),
+	    origin_line: 0,
+	    destination_line: 0,
+	    num_lines: 0
+    }])
 }
 
 	
