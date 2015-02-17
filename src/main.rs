@@ -115,8 +115,8 @@ fn dump_diffdelta(delta: &DiffDelta) {
 }
 
 fn format_key(key: String) -> String {
-    let removeWhiteSpace = regex!(r"\s{2,}"); // 2 or more whitespaces    // TODO Removes whitespace from a string.
-    removeWhiteSpace.replace_all(key.as_slice(), "")
+    let remove_whitespace = regex!(r"\s{2,}"); // 2 or more whitespaces    // TODO Removes whitespace from a string.
+    remove_whitespace.replace_all(key.as_slice(), "")
 }
 
 #[derive(Debug)]
