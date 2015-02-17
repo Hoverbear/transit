@@ -23,7 +23,7 @@ We will be using it on a few codebases including [Rust](github.com/rust-lang/rus
 ### Milestones
 
 Date | Milestone | Complete
------------ | ----------
+----------- | ------------- | -----
 February 3 | Initial prototype of project system | Yes
 February 10 | Well-defined project output | Yes
 February 12 | Feature freeze | Yes
