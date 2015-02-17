@@ -112,6 +112,11 @@ fn dump_diffdelta(delta: DiffDelta) {
             delta.new_file().id(), delta.new_file().path_bytes(), delta.new_file().path(), delta.new_file().size());
 }
 
+fn format_key(key: String) -> String {
+    let removeWhiteSpace = regex!(r"\s{2,}"); // 2 or more whitespaces    // TODO Removes whitespace from a string.
+    removeWhiteSpace.replace_all(key.as_slice(), "")
+}
+
 fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
 
     println!("\nFIND MOVES---------------------");
@@ -128,6 +133,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
     let mut deleted = String::new();
 
     let mut keys: Vec<String> = Vec::new();  // TODO Will become hashmap.
+
 
 	//let mut current_hunk: Vec<String> = Vec::new();
 	// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
@@ -178,7 +184,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
                 match state {
                     State::Deletion => {
-                        keys.push(re.replace_all(added.as_slice(), ""));
+                        keys.push(format_key(deleted.clone()));
                         deleted = String::new();
                     },
                     _ => {}
@@ -195,7 +201,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
                 match state {
                     State::Addition => {
-                        keys.push(re.replace_all(added.as_slice(), ""));
+                        keys.push(format_key(added.clone()));
                         added = String::new();
                     },
                     _ => {}
@@ -210,11 +216,11 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
                 match state {
                     State::Addition => {
-                        keys.push(re.replace_all(added.as_slice(), ""));
+                        keys.push(format_key(added.clone()));
                         added = String::new();
                     },
                     State::Deletion => {
-                        keys.push(re.replace_all(deleted.as_slice(), ""));
+                        keys.push(format_key(deleted.clone()));
                         deleted = String::new();
                     },
                     State::Other => {}
