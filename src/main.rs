@@ -88,22 +88,12 @@ fn make_output(output: Vec<Output>) {
             println!("\tnum_lines={}",          output[i].num_lines);
     }
 }
-/*
-fn to_key(s: String) -> String {
-    let re = regex!(r"\s{2,}"); // 2 or more whitespaces
-    //let re = regex::Regex::new(r"\s{2,}");
-    re.replace_all(s.as_slice(), "")
-}
-*/
+
 
 #[derive(Debug)]
 enum State {
     Other, Addition, Deletion
 }
-
-//fn transition_from_add_or_del(state: State, added: String, deleted: String) {
-
-//}
 
 fn dump_diffdelta(delta: DiffDelta) {
     println!("delta: nfiles={} status={:?} old_file=(id={} path_bytes={:?} path={:?} tsize={}) new_file=(id={} path_bytes={:?} path={:?} tsize={})",
@@ -126,16 +116,12 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 	// Build up a diff of the two trees.
 	let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
 
-    //let mut results: Vec<Output> = Vec::new();
-
     let mut state = State::Other;
     let mut added = String::new();
     let mut deleted = String::new();
 
     let mut keys: Vec<String> = Vec::new();  // TODO Will become hashmap.
 
-
-	//let mut current_hunk: Vec<String> = Vec::new();
 	// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
 	// It's a bit weird, but I think it will provide the necessary information.
 	diff.print(DiffFormat::Patch, |delta, maybe_hunk, line| -> bool {
@@ -159,23 +145,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
         //dump_diffdelta(delta);
 
-        let re = regex!(r"\s{2,}"); // 2 or more whitespaces    // TODO Removes whitespace from a string.
-
 		match line.origin() {
-            /*
-            // Context
-			' ' | '=' => {
-                print!("= {}", str::from_utf8(line.content()).unwrap());
-                offset += 1;
-                true
-            },
-			// Headers
-			'F' | 'H' => {
-                print!("F {}", str::from_utf8(line.content()).unwrap());
-                offset += 1;
-                true
-            },
-            */
 			// Additions
 			'+' | '>' => {
                 println!("In additions. state={:?}", state);
@@ -210,7 +180,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                 state = State::Deletion;
 				true
 			},
-			// Other (We don't care about these.)
+			// Other
 			_         => {
                 println!("in _. state={:?}", state);
 
@@ -230,12 +200,6 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                 true
             }
 		}
-
-			// Look at that match statement, what a hunk. So hunky.
-			// match maybe_hunk {
-			//     Some(hunk) => unimplemented!(),
-			//     None => unimplemented!(),
-			// }
 	});
 
     println!("KEYS={:?}", keys);
