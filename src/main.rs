@@ -119,10 +119,10 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                  line.old_lineno(), line.new_lineno(), line.content_offset(),
                  line.origin(), str::from_utf8(line.content()).unwrap());
 
-        println!("delta.nfiles()={}", delta.nfiles());
-        println!("delta.status()={:?}", delta.status());    // :? is for debug trait.
-        println!("delta.old_file():\n\tid={}\n\tpath_bytes=TODO\n\tpath=TODO\n\tsize={}", delta.old_file().id(), delta.old_file().size());
-        println!("delta.new_file():\n\tid={}\n\tpath_bytes=TODO\n\tpath=TODO\n\tsize={}", delta.new_file().id(), delta.new_file().size());
+        println!("delta: nfiles={} status={:?} old_file=(id={} path_bytes={:?} path={:?} tsize={}) new_file=(id={} path_bytes={:?} path={:?} tsize={})",
+                delta.nfiles(), delta.status(),
+                delta.old_file().id(), delta.old_file().path_bytes(), delta.old_file().path(), delta.old_file().size(),
+                delta.new_file().id(), delta.new_file().path_bytes(), delta.new_file().path(), delta.new_file().size());
 
 		match line.origin() {
 			// Context
