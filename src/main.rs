@@ -1,6 +1,9 @@
 #![feature(core)]
 #![feature(path)]
 
+#![feature(plugin)]
+#![plugin(regex_macros)]
+extern crate regex;
 extern crate git2;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
@@ -12,6 +15,7 @@ use std::old_io as io;
 use std::old_io::BufferedReader;
 use std::old_io::File;
 use std::str;
+use regex::Regex;
 
 // Write the Docopt usage string.
 static USAGE: &'static str = "
@@ -84,6 +88,29 @@ fn make_output(output: Vec<Output>) {
             println!("\tnum_lines={}",          output[i].num_lines);
     }
 }
+/*
+fn to_key(s: String) -> String {
+    let re = regex!(r"\s{2,}"); // 2 or more whitespaces
+    //let re = regex::Regex::new(r"\s{2,}");
+    re.replace_all(s.as_slice(), "")
+}
+*/
+
+#[derive(Debug)]
+enum State {
+    Other, Addition, Deletion
+}
+
+//fn transition_from_add_or_del(state: State, added: String, deleted: String) {
+
+//}
+
+fn dump_diffdelta(delta: DiffDelta) {
+    println!("delta: nfiles={} status={:?} old_file=(id={} path_bytes={:?} path={:?} tsize={}) new_file=(id={} path_bytes={:?} path={:?} tsize={})",
+            delta.nfiles(), delta.status(),
+            delta.old_file().id(), delta.old_file().path_bytes(), delta.old_file().path(), delta.old_file().size(),
+            delta.new_file().id(), delta.new_file().path_bytes(), delta.new_file().path(), delta.new_file().size());
+}
 
 fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
 
@@ -93,18 +120,22 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 	let new_tree = try!(new.tree());
 	// Build up a diff of the two trees.
 	let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
-	// State. TODO: Don't just use a u64.
-	//let moved = 0;
 
     //let mut results: Vec<Output> = Vec::new();
 
+    let mut state = State::Other;
+    let mut added = String::new();
+    let mut deleted = String::new();
     let mut has_addition = false;
     let mut has_deletion = false;
+
+    let mut keys: Vec<String> = Vec::new();  // TODO Will become hashmap.
 
 	//let mut current_hunk: Vec<String> = Vec::new();
 	// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
 	// It's a bit weird, but I think it will provide the necessary information.
 	diff.print(DiffFormat::Patch, |delta, maybe_hunk, line| -> bool {
+
 		// Thinking:
 		//  * If is not a hunk, keep going.
 		//  * If it's a hunk, do regex magic.
@@ -114,45 +145,96 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 		// If we're not interested in this line just return since it will iterate to the next.
 		if maybe_hunk.is_none() { return true }; // Return early.
 
+        println!("top of loop: keys={:?}", keys);
+        println!("top of loop: added={:?} deleted={:?}", added, deleted);
+
         // 'origin' is wrapped in pipes to ease displaying space characters.
         print!("line: old={:?} new={:?} offset={} |origin|=|{}|\n      content={}",
                  line.old_lineno(), line.new_lineno(), line.content_offset(),
                  line.origin(), str::from_utf8(line.content()).unwrap());
 
-        println!("delta: nfiles={} status={:?} old_file=(id={} path_bytes={:?} path={:?} tsize={}) new_file=(id={} path_bytes={:?} path={:?} tsize={})",
-                delta.nfiles(), delta.status(),
-                delta.old_file().id(), delta.old_file().path_bytes(), delta.old_file().path(), delta.old_file().size(),
-                delta.new_file().id(), delta.new_file().path_bytes(), delta.new_file().path(), delta.new_file().size());
+        //dump_diffdelta(delta);
+
+        let re = regex!(r"\s{2,}"); // 2 or more whitespaces    // TODO Removes whitespace from a string.
 
 		match line.origin() {
-			// Context
+            /*
+            // Context
 			' ' | '=' => {
                 print!("= {}", str::from_utf8(line.content()).unwrap());
+                offset += 1;
                 true
             },
 			// Headers
 			'F' | 'H' => {
                 print!("F {}", str::from_utf8(line.content()).unwrap());
+                offset += 1;
                 true
             },
+            */
 			// Additions
 			'+' | '>' => {
 				print!("+ {}", str::from_utf8(line.content()).unwrap());
+
+                added.push_str(str::from_utf8(line.content()).unwrap());
                 has_addition = true;
+
+                println!("In additions. state={:?}", state);
+
+                match state {
+                    State::Deletion => {
+                        keys.push(re.replace_all(added.as_slice(), ""));
+                        deleted = String::new();
+                    },
+                    _ => {}
+                }
+
+                state = State::Addition;
 				true
 			},
 			// Deletions
 			'-' | '<' => {
 				print!("- {}", str::from_utf8(line.content()).unwrap());
+
+                deleted.push_str(str::from_utf8(line.content()).unwrap());
                 has_deletion = true;
+
+                println!("In deletion. state={:?}", state);
+
+                match state {
+                    State::Addition => {
+                        keys.push(re.replace_all(added.as_slice(), ""));
+                        added = String::new();
+                    },
+                    _ => {}
+                }
+
+                state = State::Deletion;
 				true
 			},
 			// Other (We don't care about these.)
 			_         => {
                 print!("_ {}", str::from_utf8(line.content()).unwrap());
+
+                println!("in _. state={:?}", state);
+
+                match state {
+                    State::Addition => {
+                        keys.push(re.replace_all(added.as_slice(), ""));
+                        added = String::new();
+                    },
+                    State::Deletion => {
+                        keys.push(re.replace_all(deleted.as_slice(), ""));
+                        deleted = String::new();
+                    },
+                    State::Other => {}
+                }
+
+                state = State::Other;
                 true
             }
 		}
+
 			// Look at that match statement, what a hunk. So hunky.
 			// match maybe_hunk {
 			//     Some(hunk) => unimplemented!(),
@@ -162,7 +244,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
 
     println!("\nhas_addition={}, has_deletion={}", has_addition, has_deletion);
-
+    println!("KEYS={:?}", keys);
    // if has_addition && has_deletion {
 /*
         results.push(Output {
@@ -194,7 +276,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 }
 
 	
-#[derive(Show)]	
+#[derive(Debug)]
 struct Output {
     old_commit: Oid,
     new_commit: Oid,
