@@ -85,14 +85,6 @@ fn make_output(output: Vec<Output>) {
     }
 }
 
-fn print_or_none<T: std::fmt::Display> (s: &str, opt: Option<T>) {
-    print!("{}=", s);
-    match opt {
-        Some(value) => println!("{}", value),
-        None => println!("NONE"),
-    }
-}
-
 fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
 
     println!("\nFIND MOVES---------------------");
@@ -123,8 +115,8 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 		if maybe_hunk.is_none() { return true }; // Return early.
 
         println!("");
-        print_or_none("line.old_lineno()", line.old_lineno());
-        print_or_none("line.new_lineno()", line.new_lineno());
+        println!("line.old_lineno()={:?}", line.old_lineno());
+        println!("line.new_lineno()={:?}", line.new_lineno());
         println!("line.num_lines()={}",  line.num_lines());
         println!("line.content_offset={}", line.content_offset());
         println!("|line.origin()|=|{}|", line.origin());  // Wrap in |'s to detect space characters.
