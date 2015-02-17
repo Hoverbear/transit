@@ -140,8 +140,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 	// It's a bit weird, but I think it will provide the necessary information.
 	diff.print(DiffFormat::Patch, |delta, maybe_hunk, line| -> bool {
 
-        // Have not defined behaviour for number of files != 2.
-        assert!(delta.nfiles() == 2);
+        assert!(delta.nfiles() == 2, "This only works on diffs between exactly 2 files.");
 
 		// Thinking:
 		//  * If is not a hunk, keep going.
