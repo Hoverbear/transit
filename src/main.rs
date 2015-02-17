@@ -157,7 +157,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                         keys.push(format_key(deleted.clone()));
                         deleted = String::new();
                     },
-                    _ => {}
+                    _ => (),
                 }
 
                 state = State::Addition;
@@ -174,7 +174,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                         keys.push(format_key(added.clone()));
                         added = String::new();
                     },
-                    _ => {}
+                    _ => (),
                 }
 
                 state = State::Deletion;
@@ -193,7 +193,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                         keys.push(format_key(deleted.clone()));
                         deleted = String::new();
                     },
-                    State::Other => {}
+                    State::Other => (),
                 }
 
                 state = State::Other;
