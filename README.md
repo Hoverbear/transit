@@ -22,17 +22,17 @@ We will be using it on a few codebases including [Rust](github.com/rust-lang/rus
 
 ### Milestones
 
-Date | Milestone
+Date | Milestone | Complete
 ----------- | ----------
-February 3 | Initial prototype of project system
-February 10 | Well-defined project output
-February 12 | Feature freeze
-February 16 | Complete refactor identification functionality
-February 17 | Complete testing & release version 1.0
-February 20 | Complete analysis of target codebases
-February 21 | Document findings
-February 22 | Finalized report
-February 23 | Submit final project
+February 3 | Initial prototype of project system | Yes
+February 10 | Well-defined project output | Yes
+February 12 | Feature freeze | Yes
+February 16 | Complete refactor identification functionality | In progress
+February 17 | Complete testing & release version 1.0 |
+February 20 | Complete analysis of target codebases |
+February 21 | Document findings |
+February 22 | Finalized report |
+February 23 | Submit final project |
 
 ### Resources
 
