@@ -122,12 +122,10 @@ router.get('/', function (req, res, next) {
         });
     }
 
-
-    
+    function renderOutput(output) {
+        res.render('transit', output);
+    }
 });
 
-function renderOutput(output) {
-    res.render('transit', output);
-}
 
 module.exports = router;
