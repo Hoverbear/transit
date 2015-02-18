@@ -6,7 +6,11 @@ var router          = express.Router();
 function executeTransit(repo, from, to) {
     var deferred = q.defer();
     var cmd = '../target/transit';
-    var args = [ repo, from, to ];
+    var args = [ repo ];
+    if( from && to) {
+        args[1] = from;
+        args[2] = to;
+    }
     var kinderProcess = child.spawn(cmd, args);
     var fileContents;
     var transitOutput = "";
