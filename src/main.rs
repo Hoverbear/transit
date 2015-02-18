@@ -92,27 +92,9 @@ fn make_output(output: Vec<Output>) {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 enum FoundState {
     Added, Deleted
-}
-impl PartialEq for FoundState {
-    fn eq(&self, other: &FoundState) -> bool {
-        match *self {
-            FoundState::Added => {
-                match *other {
-                    FoundState::Added   => { true  },
-                    FoundState::Deleted => { false },
-                }
-            },
-            FoundState::Deleted => {
-                match *other {
-                    FoundState::Added   => { false  },
-                    FoundState::Deleted => { true },
-                }
-            },
-        }
-    }
 }
 
 fn dump_diffline(line: &DiffLine) {
