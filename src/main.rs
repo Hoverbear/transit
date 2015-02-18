@@ -327,7 +327,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                 let mut old_filename: String;
                 let mut new_filename: String;
 
-                assert!(f.state != q.state, "One must be an addition and one must be a deletion.");
+                assert!(f.state != q.state, "One state must be an addition and the other state must be a deletion.");
 
                 match f.state {
                     FoundState::Added => {
