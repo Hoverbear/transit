@@ -118,6 +118,7 @@ struct Found {
     filename: Path,
     key: String,
     state: FoundState,
+    start_position: u64,
     line_count: u64,
 }
 
@@ -137,6 +138,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
     let mut new_path = Path::new("");
 
     let mut line_count: u64 = 0;
+    let mut start_position: u64 = 0;
 
 	// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
 	// It's a bit weird, but I think it will provide the necessary information.
@@ -176,13 +178,20 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                             filename: old_path.clone(),
                             key: format_key(deleted.clone()),
                             state: FoundState::Deleted,
+                            start_position: start_position,
                             line_count: line_count,
                         });
                         deleted = String::new();
                         line_count = 0;
+                        start_position = std::num::from_u32(line.new_lineno().unwrap()).unwrap();   // TODO
                     },
-                    State::Addition => { line_count += 1; },
-                    State::Other    => { line_count = 1;  },
+                    State::Addition => {
+                        line_count += 1;
+                    },
+                    State::Other => {
+                        line_count = 1;
+                        start_position = std::num::from_u32(line.new_lineno().unwrap()).unwrap();   // TODO
+                    },
                 }
 
                 state = State::Addition;
@@ -200,13 +209,20 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                             filename: new_path.clone(),
                             key: format_key(added.clone()),
                             state: FoundState::Added,
+                            start_position: start_position,
                             line_count: line_count,
                         });
                         added = String::new();
                         line_count = 0;
+                        start_position = std::num::from_u32(line.old_lineno().unwrap()).unwrap();   // TODO
                     },
-                    State::Deletion => { line_count += 1; },
-                    State::Other    => { line_count = 1;  },
+                    State::Deletion => {
+                        line_count += 1;
+                    },
+                    State::Other => {
+                        line_count = 1;
+                        start_position = std::num::from_u32(line.old_lineno().unwrap()).unwrap();   // TODO
+                    },
                 }
 
                 state = State::Deletion;
@@ -222,6 +238,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                             filename: new_path.clone(),
                             key: format_key(added.clone()),
                             state: FoundState::Added,
+                            start_position: start_position,
                             line_count: line_count,
                         });
                         added = String::new();
@@ -231,6 +248,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                             filename: old_path.clone(),
                             key: format_key(deleted.clone()),
                             state: FoundState::Deleted,
+                            start_position: start_position,
                             line_count: line_count,
                         });
                         deleted = String::new();
@@ -252,6 +270,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                     filename: new_path,
                     key: format_key(added.clone()),
                     state: FoundState::Added,
+                    start_position: start_position,
                     line_count: line_count,
                 });
             }
@@ -262,6 +281,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                     filename: old_path,
                     key: format_key(deleted.clone()),
                     state: FoundState::Deleted,
+                    start_position: start_position,
                     line_count: line_count,
                 });
             }
