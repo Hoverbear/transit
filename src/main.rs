@@ -12,6 +12,7 @@ use git2::{Repository, Branch, BranchType, DiffLine,
     Commit, Diff, DiffFormat, DiffDelta, DiffHunk, Error, Oid};
 use docopt::Docopt;
 use std::old_io as io;
+use std::collections::HashMap;
 use std::old_io::BufferedReader;
 use std::old_io::File;
 use std::str;
@@ -86,12 +87,32 @@ fn make_output(output: Vec<Output>) {
             println!("\torigin_line={}",        output[i].origin_line);
             println!("\tdestintation_line={}",  output[i].destination_line);
             println!("\tnum_lines={}",          output[i].num_lines);
+            println!("\tnew_filename={}",       output[i].new_filename);
+            println!("\told_filename={}",       output[i].old_filename);
     }
 }
 
 #[derive(Debug)]
 enum FoundState {
     Added, Deleted
+}
+impl PartialEq for FoundState {
+    fn eq(&self, other: &FoundState) -> bool {
+        match *self {
+            FoundState::Added => {
+                match *other {
+                    FoundState::Added   => { true  },
+                    FoundState::Deleted => { false },
+                }
+            },
+            FoundState::Deleted => {
+                match *other {
+                    FoundState::Added   => { false  },
+                    FoundState::Deleted => { true },
+                }
+            },
+        }
+    }
 }
 
 fn dump_diffline(line: &DiffLine) {
@@ -110,7 +131,9 @@ fn dump_diffdelta(delta: &DiffDelta) {
 
 fn format_key(key: String) -> String {
     let remove_whitespace = regex!(r"\s{2,}"); // 2 or more whitespaces    // TODO Removes whitespace from a string.
-    remove_whitespace.replace_all(key.as_slice(), "")
+    let trim = regex!(r"^[\s]+|[\s]+$");
+    let result = remove_whitespace.replace_all(key.as_slice(), "");
+    trim.replace_all(result.as_slice(), "")
 }
 
 #[derive(Debug)]
@@ -118,8 +141,8 @@ struct Found {
     filename: Path,
     key: String,
     state: FoundState,
-    start_position: u64,
-    line_count: u64,
+    start_position: u32,
+    line_count: u32,
 }
 
 fn find_keys(diff: Diff) -> Vec<Found> {
@@ -137,8 +160,8 @@ fn find_keys(diff: Diff) -> Vec<Found> {
     let mut old_path = Path::new("");
     let mut new_path = Path::new("");
 
-    let mut line_count: u64 = 0;
-    let mut start_position: u64 = 0;
+    let mut line_count: u32 = 0;
+    let mut start_position: u32 = 0;
 
 	// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
 	// It's a bit weird, but I think it will provide the necessary information.
@@ -183,14 +206,14 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                         });
                         deleted = String::new();
                         line_count = 0;
-                        start_position = std::num::from_u32(line.new_lineno().unwrap()).unwrap();   // TODO
+                        start_position = line.new_lineno().unwrap();
                     },
                     State::Addition => {
                         line_count += 1;
                     },
                     State::Other => {
                         line_count = 1;
-                        start_position = std::num::from_u32(line.new_lineno().unwrap()).unwrap();   // TODO
+                        start_position = line.new_lineno().unwrap();
                     },
                 }
 
@@ -214,14 +237,14 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                         });
                         added = String::new();
                         line_count = 0;
-                        start_position = std::num::from_u32(line.old_lineno().unwrap()).unwrap();   // TODO
+                        start_position = line.old_lineno().unwrap();
                     },
                     State::Deletion => {
                         line_count += 1;
                     },
                     State::Other => {
                         line_count = 1;
-                        start_position = std::num::from_u32(line.old_lineno().unwrap()).unwrap();   // TODO
+                        start_position = line.old_lineno().unwrap();
                     },
                 }
 
@@ -292,6 +315,10 @@ fn find_keys(diff: Diff) -> Vec<Found> {
     return founds;
 }
 
+fn path_to_string(path: Path) -> String {
+    String::from_utf8(path.into_vec()).unwrap()
+}
+
 fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
 
     println!("\nFIND MOVES---------------------");
@@ -301,19 +328,58 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 	// Build up a diff of the two trees.
 	let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
 
-    let mut founds: Vec<Found> = find_keys(diff);
+    let founds: Vec<Found> = find_keys(diff);
 
     println!("FOUNDS={:?}", founds);
 
-    Ok(vec![Output {
-	    old_commit: old.id(),
-	    new_commit: new.id(),
-        old_filename: String::from_str("oldfilename"),
-        new_filename: String::from_str("newfilename"),
-	    origin_line: 0,
-	    destination_line: 0,
-	    num_lines: 0
-    }])
+    let mut moves: Vec<Output> = Vec::new();
+
+    let mut map: HashMap<String, Found> = HashMap::new();
+
+    for f in founds {
+        if map.contains_key(&f.key) {
+            let q = map.get(&f.key).unwrap();
+            if q.line_count == f.line_count {
+                let mut origin_line: u32;
+                let mut destination_line: u32;
+                let mut old_filename: String;
+                let mut new_filename: String;
+
+                assert!(f.state != q.state, "One must be an addition and one must be a deletion.");
+
+                match f.state {
+                    FoundState::Added => {
+                        origin_line = q.start_position;
+                        destination_line = f.start_position;
+                        old_filename = path_to_string(q.filename.clone());
+                        new_filename = path_to_string(f.filename.clone());
+                    },
+                    FoundState::Deleted => {
+                        origin_line = f.start_position;
+                        destination_line = q.start_position;
+                        old_filename = path_to_string(f.filename.clone());
+                        new_filename = path_to_string(q.filename.clone());
+                    },
+                }
+
+                moves.push(
+                    Output {
+                        old_commit: old.id(),
+	                    new_commit: new.id(),
+                        old_filename: old_filename,
+                        new_filename: new_filename,
+	                    origin_line: origin_line,
+	                    destination_line: destination_line,
+	                    num_lines: f.line_count,
+                    }
+                );
+            }
+        } else {
+            map.insert(f.key.clone(), f);
+        }
+    }
+
+    return Ok(moves);
 }
 
 	
