@@ -89,12 +89,6 @@ fn make_output(output: Vec<Output>) {
     }
 }
 
-
-#[derive(Debug)]
-enum State {
-    Other, Addition, Deletion
-}
-
 #[derive(Debug)]
 enum FoundState {
     Added, Deleted
@@ -126,22 +120,20 @@ struct Found {
     state: FoundState,
 }
 
-fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
+fn find_keys(diff: Diff) -> Vec<Found> {
 
-    println!("\nFIND MOVES---------------------");
+    #[derive(Debug)]
+    enum State {
+        Other, Addition, Deletion
+    }
 
-	let old_tree = try!(old.tree());
-	let new_tree = try!(new.tree());
-	// Build up a diff of the two trees.
-	let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
+    let mut founds: Vec<Found> = Vec::new();
 
     let mut state = State::Other;
     let mut added = String::new();
     let mut deleted = String::new();
-    let mut old_path: Path = Path::new("");
-    let mut new_path: Path = Path::new("");
-
-    let mut founds: Vec<Found> = Vec::new();
+    let mut old_path = Path::new("");
+    let mut new_path = Path::new("");
 
 	// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
 	// It's a bit weird, but I think it will provide the necessary information.
@@ -262,6 +254,20 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
         },
         _ => (),
     }
+
+    return founds;
+}
+
+fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
+
+    println!("\nFIND MOVES---------------------");
+
+	let old_tree = try!(old.tree());
+	let new_tree = try!(new.tree());
+	// Build up a diff of the two trees.
+	let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
+
+    let mut founds: Vec<Found> = find_keys(diff);
 
     println!("FOUNDS={:?}", founds);
 
