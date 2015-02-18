@@ -92,7 +92,7 @@ router.get('/', function (req, res, next) {
     if(repositoryName && repoPath) {
         console.log('calling transit with:', repoPath, oldCommit, newCommit);
         
-        executeTransit(repoPath, oldCommit, newCommit)
+        executeTransit(repoPath, oldCommit ? oldCommit: null, newCommit ? newCommit : null)
             .then(function(diffs) {
                 renderOutput({
                     title: 'transit express',
