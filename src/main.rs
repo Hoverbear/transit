@@ -118,7 +118,7 @@ struct Found {
     filename: Path,
     key: String,
     state: FoundState,
-    length: u64,
+    line_count: u64,
 }
 
 fn find_keys(diff: Diff) -> Vec<Found> {
@@ -136,7 +136,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
     let mut old_path = Path::new("");
     let mut new_path = Path::new("");
 
-    let mut length: u64 = 0;
+    let mut line_count: u64 = 0;
 
 	// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
 	// It's a bit weird, but I think it will provide the necessary information.
@@ -155,7 +155,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
 
         println!("top of loop: founds={:?}", founds);
         println!("top of loop: added={:?} deleted={:?}", added, deleted);
-        println!("top of loop: length={:?}", length);
+        println!("top of loop: line_count={:?}", line_count);
 
         dump_diffline(&line);
         //dump_diffdelta(&delta);
@@ -176,13 +176,13 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                             filename: old_path.clone(),
                             key: format_key(deleted.clone()),
                             state: FoundState::Deleted,
-                            length: length,
+                            line_count: line_count,
                         });
                         deleted = String::new();
-                        length = 0;
+                        line_count = 0;
                     },
-                    State::Addition => { length += 1; },
-                    State::Other    => { length = 1;  },
+                    State::Addition => { line_count += 1; },
+                    State::Other    => { line_count = 1;  },
                 }
 
                 state = State::Addition;
@@ -200,13 +200,13 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                             filename: new_path.clone(),
                             key: format_key(added.clone()),
                             state: FoundState::Added,
-                            length: length,
+                            line_count: line_count,
                         });
                         added = String::new();
-                        length = 0;
+                        line_count = 0;
                     },
-                    State::Deletion => { length += 1; },
-                    State::Other    => { length = 1;  },
+                    State::Deletion => { line_count += 1; },
+                    State::Other    => { line_count = 1;  },
                 }
 
                 state = State::Deletion;
@@ -222,7 +222,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                             filename: new_path.clone(),
                             key: format_key(added.clone()),
                             state: FoundState::Added,
-                            length: length,
+                            line_count: line_count,
                         });
                         added = String::new();
                     },
@@ -231,7 +231,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                             filename: old_path.clone(),
                             key: format_key(deleted.clone()),
                             state: FoundState::Deleted,
-                            length: length,
+                            line_count: line_count,
                         });
                         deleted = String::new();
                     },
@@ -252,7 +252,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                     filename: new_path,
                     key: format_key(added.clone()),
                     state: FoundState::Added,
-                    length: length,
+                    line_count: line_count,
                 });
             }
         },
@@ -262,7 +262,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
                     filename: old_path,
                     key: format_key(deleted.clone()),
                     state: FoundState::Deleted,
-                    length: length,
+                    line_count: line_count,
                 });
             }
         },
