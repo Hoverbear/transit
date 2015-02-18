@@ -267,7 +267,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
 		}
 	});
 
-    // Grab one.
+    // Grab last one.
     match state {
         State::Addition => {
             if added.len() > 0 {
