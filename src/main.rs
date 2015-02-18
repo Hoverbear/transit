@@ -319,6 +319,8 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
     let mut map: HashMap<String, Found> = HashMap::new();
 
     for f in founds {
+        if f.key.len() == 0 { continue; }
+
         if map.contains_key(&f.key) {
             let q = map.get(&f.key).unwrap();
             if q.line_count == f.line_count {
