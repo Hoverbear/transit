@@ -97,6 +97,13 @@ router.get('/', function (req, res, next) {
                     repository: repositoryName,
                     diffs: diffs
                 });
+            }, function inCaseOfFailure(message) {
+                renderOutput({
+                    title: 'transit express',
+                    repository: repositoryName + 'failed to read repository: ' + repoPath + ' due to: ' + message,
+                    diffs: []
+                });
+                
             });
     } else {
         //test mock up data
