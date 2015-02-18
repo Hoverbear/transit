@@ -149,7 +149,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
 	// It's a bit weird, but I think it will provide the necessary information.
 	diff.print(DiffFormat::Patch, |delta, maybe_hunk, line| -> bool {
 
-        assert!(delta.nfiles() == 2, "This only works on diffs between exactly 2 files.");
+        assert!(delta.nfiles() == 2, "This only works on diffs between exactly 2 files. Found {} files.", delta.nfiles());
 
 		// Thinking:
 		//  * If is not a hunk, keep going.
