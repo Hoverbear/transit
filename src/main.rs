@@ -79,8 +79,7 @@ fn main() {
 }
 
 fn make_output(output: Vec<Output>) {
-	println!("make_output:");
-    println!("\toutput.len()={}", output.len());
+	println!("make_output: output.len()={}", output.len());
     for i in range(0, output.len()) {
             println!("\told_commit={}",         output[i].old_commit);
             println!("\tnew_commit={}",         output[i].new_commit);
