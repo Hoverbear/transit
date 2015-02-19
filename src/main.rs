@@ -167,11 +167,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
 		// If we're not interested in this line just return since it will iterate to the next.
 		if maybe_hunk.is_none() { return true }; // Return early.
 
-        println!("top of loop: founds={:?}", founds);
-        println!("top of loop: added={:?} deleted={:?}", added, deleted);
-        println!("top of loop: line_count={:?}", line_count);
-
-        dump_diffline(&line);
+        //dump_diffline(&line);
         //dump_diffdelta(&delta);
         //dump_diffhunk(&maybe_hunk.unwrap());
 
@@ -181,8 +177,6 @@ fn find_keys(diff: Diff) -> Vec<Found> {
 		match line.origin() {
 			// Additions
 			'+' | '>' => {
-                println!("In additions. state={:?}", state);
-
                 added.push_str(str::from_utf8(line.content()).unwrap());
 
                 match state {
@@ -212,8 +206,6 @@ fn find_keys(diff: Diff) -> Vec<Found> {
 			},
 			// Deletions
 			'-' | '<' => {
-                println!("In deletion. state={:?}", state);
-
                 deleted.push_str(str::from_utf8(line.content()).unwrap());
 
                 match state {
@@ -243,8 +235,6 @@ fn find_keys(diff: Diff) -> Vec<Found> {
 			},
 			// Other
 			_         => {
-                println!("in _. state={:?}", state);
-
                 match state {
                     State::Addition => {
                         founds.push(Found {
@@ -310,9 +300,6 @@ fn path_to_string(path: Path) -> String {
 }
 
 fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
-
-    println!("\nFIND MOVES---------------------");
-
 	let old_tree = try!(old.tree());
 	let new_tree = try!(new.tree());
 	// Build up a diff of the two trees.
@@ -320,10 +307,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
     let founds: Vec<Found> = find_keys(diff);
 
-    println!("FOUNDS={:?}", founds);
-
     let mut moves: Vec<Output> = Vec::new();
-
     let mut map: HashMap<String, Found> = HashMap::new();
 
     for f in founds {
