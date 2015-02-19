@@ -1,0 +1,36 @@
+extends layout
+block content
+    h1= title
+    p.
+        Welcome to #{title}
+        hello world
+    div.container
+        div#repository
+            strong source repository: 
+            = repository
+            p
+        table.table.table-bordered.table-striped
+            thead
+                tr
+                    th.
+                        Diff
+                    th old commit
+                    th new commit
+                    th old filename
+                    th new filename
+                    th origin line
+                    th destination line
+                    th number of lines
+            tbody
+                - for (var x = 0; x < diffs.length; x++)
+                    tr
+                        td= x
+                        td= diffs[x].old_commit
+                        td= diffs[x].new_commit
+                        td= diffs[x].old_filename
+                        td= diffs[x].new_filename
+                        td= diffs[x].origin_line
+                        td= diffs[x].destination_line
+                        td= diffs[x].num_lines
+
+    p done
