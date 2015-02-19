@@ -111,6 +111,13 @@ fn dump_diffdelta(delta: &DiffDelta) {
             delta.new_file().id(), delta.new_file().path_bytes(), delta.new_file().path(), delta.new_file().size());
 }
 
+fn dump_diffhunk(hunk: &DiffHunk) {
+    println!("hunk: old_start={} old_lines={} new_start={} new_lines={} header={}",
+            hunk.old_start(), hunk.old_lines(),
+            hunk.new_start(), hunk.new_lines(),
+            str::from_utf8(hunk.header()).unwrap());
+}
+
 fn format_key(key: String) -> String {
     let remove_whitespace = regex!(r"\s{2,}"); // 2 or more whitespaces    // TODO Removes whitespace from a string.
     let trim = regex!(r"^[\s]+|[\s]+$");
@@ -166,6 +173,7 @@ fn find_keys(diff: Diff) -> Vec<Found> {
 
         dump_diffline(&line);
         //dump_diffdelta(&delta);
+        //dump_diffhunk(&maybe_hunk.unwrap());
 
         old_path = delta.old_file().path().unwrap().clone();
         new_path = delta.new_file().path().unwrap().clone();
