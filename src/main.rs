@@ -314,39 +314,37 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
         if map.contains_key(&f.key) {
             let q = map.get(&f.key).unwrap();
-            if q.line_count == f.line_count {
 
-                assert!(f.state != q.state, "One state must be an addition and the other state must be a deletion.");
+            assert!(f.state != q.state, "One state must be an addition and the other state must be a deletion.");
 
-                let output: Output;
+            let output: Output;
 
-                match f.state {
-                    FoundState::Added => {
-                        output = Output {
-                            old_commit: old.id(),
-                            new_commit: new.id(),
-                            old_filename: path_to_string(q.filename.clone()),
-                            new_filename: path_to_string(f.filename.clone()),
-                            origin_line: q.start_position,
-                            destination_line: f.start_position,
-                            num_lines: f.line_count,
-                        };
-                    },
-                    FoundState::Deleted => {
-                        output = Output {
-                            old_commit: old.id(),
-                            new_commit: new.id(),
-                            old_filename: path_to_string(f.filename.clone()),
-                            new_filename: path_to_string(q.filename.clone()),
-                            origin_line: f.start_position,
-                            destination_line: q.start_position,
-                            num_lines: f.line_count,
-                        };
-                    },
-                }
-
-                moves.push(output);
+            match f.state {
+                FoundState::Added => {
+                    output = Output {
+                        old_commit: old.id(),
+                        new_commit: new.id(),
+                        old_filename: path_to_string(q.filename.clone()),
+                        new_filename: path_to_string(f.filename.clone()),
+                        origin_line: q.start_position,
+                        destination_line: f.start_position,
+                        num_lines: f.line_count,
+                    };
+                },
+                FoundState::Deleted => {
+                    output = Output {
+                        old_commit: old.id(),
+                        new_commit: new.id(),
+                        old_filename: path_to_string(f.filename.clone()),
+                        new_filename: path_to_string(q.filename.clone()),
+                        origin_line: f.start_position,
+                        destination_line: q.start_position,
+                        num_lines: f.line_count,
+                    };
+                },
             }
+
+            moves.push(output);
         } else {
             map.insert(f.key.clone(), f);
         }
