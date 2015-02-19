@@ -133,7 +133,7 @@ struct Found {
     line_count: u32,
 }
 
-fn find_keys(diff: Diff) -> Vec<Found> {
+fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
 
     #[derive(Debug)]
     enum State {
@@ -304,7 +304,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 	// Build up a diff of the two trees.
 	let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
 
-    let founds: Vec<Found> = find_keys(diff);
+    let founds: Vec<Found> = find_additions_and_deletions(diff);
 
     let mut moves: Vec<Output> = Vec::new();
     let mut map: HashMap<String, Found> = HashMap::new();
