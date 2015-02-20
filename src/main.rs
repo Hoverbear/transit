@@ -71,15 +71,15 @@ fn main() {
             .collect::<Vec<Commit>>();
         // Walk through each pair of commits.
         for pair in history.windows(2) {let (old, new) = (&pair[1], &pair[0]);
-			let output = find_moves(&repo, old.clone(), new.clone()).unwrap();
-			// mangle the vectors here to make pretty output
-			make_output(output);
-		}
-	}
+            let output = find_moves(&repo, old.clone(), new.clone()).unwrap();
+            // mangle the vectors here to make pretty output
+            make_output(output);
+        }
+    }
 }
 
 fn make_output(output: Vec<Output>) {
-	println!("make_output: output.len()={}", output.len());
+    println!("make_output: output.len()={}", output.len());
     for i in range(0, output.len()) {
             println!("\told_commit={}",         output[i].old_commit);
             println!("\tnew_commit={}",         output[i].new_commit);
@@ -151,20 +151,20 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
     let mut line_count: u32 = 0;
     let mut start_position: u32 = 0;
 
-	// Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
-	// It's a bit weird, but I think it will provide the necessary information.
-	diff.print(DiffFormat::Patch, |delta, maybe_hunk, line| -> bool {
+    // Read about this function in http://alexcrichton.com/git2-rs/git2/struct.Diff.html#method.print
+    // It's a bit weird, but I think it will provide the necessary information.
+    diff.print(DiffFormat::Patch, |delta, maybe_hunk, line| -> bool {
 
         assert!(delta.nfiles() == 2, "This only works on diffs between exactly 2 files. Found {} files.", delta.nfiles());
 
-		// Thinking:
-		//  * If is not a hunk, keep going.
-		//  * If it's a hunk, do regex magic.
-		//  * Stick regex output into a hashmap as a hash.
-		//  * Later, we will iterate through and output pased on the values.
-		// Filter out all the boring context lines.
-		// If we're not interested in this line just return since it will iterate to the next.
-		if maybe_hunk.is_none() { return true }; // Return early.
+        // Thinking:
+        //  * If is not a hunk, keep going.
+        //  * If it's a hunk, do regex magic.
+        //  * Stick regex output into a hashmap as a hash.
+        //  * Later, we will iterate through and output pased on the values.
+        // Filter out all the boring context lines.
+        // If we're not interested in this line just return since it will iterate to the next.
+        if maybe_hunk.is_none() { return true }; // Return early.
 
         //dump_diffline(&line);
         //dump_diffdelta(&delta);
@@ -173,9 +173,9 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
         old_path = delta.old_file().path().unwrap().clone();
         new_path = delta.new_file().path().unwrap().clone();
 
-		match line.origin() {
-			// Additions
-			'+' | '>' => {
+        match line.origin() {
+            // Additions
+            '+' | '>' => {
                 added.push_str(str::from_utf8(line.content()).unwrap());
 
                 match state {
@@ -201,10 +201,10 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
                 }
 
                 state = State::Addition;
-				true
-			},
-			// Deletions
-			'-' | '<' => {
+                true
+            },
+            // Deletions
+            '-' | '<' => {
                 deleted.push_str(str::from_utf8(line.content()).unwrap());
 
                 match state {
@@ -230,10 +230,10 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
                 }
 
                 state = State::Deletion;
-				true
-			},
-			// Other
-			_         => {
+                true
+            },
+            // Other
+            _         => {
                 match state {
                     State::Addition => {
                         founds.push(Found {
@@ -261,8 +261,8 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
                 state = State::Other;
                 true
             }
-		}
-	});
+        }
+    });
 
     // Grab last one.
     match state {
@@ -299,10 +299,10 @@ fn path_to_string(path: Path) -> String {
 }
 
 fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
-	let old_tree = try!(old.tree());
-	let new_tree = try!(new.tree());
-	// Build up a diff of the two trees.
-	let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
+    let old_tree = try!(old.tree());
+    let new_tree = try!(new.tree());
+    // Build up a diff of the two trees.
+    let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
 
     let founds: Vec<Found> = find_additions_and_deletions(diff);
 
@@ -353,7 +353,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
     return Ok(moves);
 }
 
-	
+
 #[derive(Debug)]
 struct Output {
     old_commit: Oid,
