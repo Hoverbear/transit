@@ -12,5 +12,5 @@ authors = [
 rustc-serialize = "*"
 docopt = "*"
 git2 = "*"
-regex = "0.1.8"
-regex_macros = "0.1.8"
+regex = "*"
+regex_macros = "*"
