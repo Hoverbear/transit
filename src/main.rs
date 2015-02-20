@@ -5,11 +5,12 @@
 #![plugin(regex_macros)]
 extern crate regex;
 extern crate git2;
+extern crate core;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
 
 use git2::{Repository, Branch, BranchType, DiffLine,
-    Commit, Diff, DiffFormat, DiffDelta, DiffHunk, Error, Oid};
+    Commit, Diff, DiffFormat, DiffDelta, DiffHunk, Oid};
 use docopt::Docopt;
 use std::old_io as io;
 use std::collections::HashMap;
@@ -17,10 +18,12 @@ use std::old_io::BufferedReader;
 use std::old_io::File;
 use std::str;
 use regex::Regex;
+use rustc_serialize::json::{self, ToJson, Json};
+use std::fmt::Display;
 
 // Write the Docopt usage string.
 static USAGE: &'static str = "
-Usage: transit <repo> [<old> <new>]
+Usage: transit <repo> [--json] [<old> <new>]
 
 If no commits are given, transit will revwalk from latest to oldest.
 ";
@@ -30,6 +33,7 @@ struct Args {
     arg_repo: String,
     arg_old: Option<String>,
     arg_new: Option<String>,
+    flag_json: bool,
 }
 
 fn main() {
@@ -72,8 +76,11 @@ fn main() {
         // Walk through each pair of commits.
         for pair in history.windows(2) {let (old, new) = (&pair[1], &pair[0]);
             let output = find_moves(&repo, old.clone(), new.clone()).unwrap();
-            // mangle the vectors here to make pretty output
-            make_output(output);
+            if args.flag_json {
+                make_json(output);
+            } else {
+                make_output(output);
+            }
         }
     }
 }
@@ -89,6 +96,10 @@ fn make_output(output: Vec<Output>) {
             println!("\tnew_filename={}",       output[i].new_filename);
             println!("\told_filename={}",       output[i].old_filename);
     }
+}
+
+fn make_json(output: Vec<Output>) {
+    println!("{}", json::encode(&output).unwrap());
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -298,7 +309,7 @@ fn path_to_string(path: Path) -> String {
     String::from_utf8(path.into_vec()).unwrap()
 }
 
-fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, Error> {
+fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, git2::Error> {
     let old_tree = try!(old.tree());
     let new_tree = try!(new.tree());
     // Build up a diff of the two trees.
@@ -322,8 +333,8 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
             match f.state {
                 FoundState::Added => {
                     output = Output {
-                        old_commit: old.id(),
-                        new_commit: new.id(),
+                        old_commit: TransitOid(old.id()),
+                        new_commit: TransitOid(new.id()),
                         old_filename: path_to_string(q.filename.clone()),
                         new_filename: path_to_string(f.filename.clone()),
                         origin_line: q.start_position,
@@ -333,8 +344,8 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                 },
                 FoundState::Deleted => {
                     output = Output {
-                        old_commit: old.id(),
-                        new_commit: new.id(),
+                        old_commit: TransitOid(old.id()),
+                        new_commit: TransitOid(new.id()),
                         old_filename: path_to_string(f.filename.clone()),
                         new_filename: path_to_string(q.filename.clone()),
                         origin_line: f.start_position,
@@ -354,13 +365,27 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, RustcEncodable)]
 struct Output {
-    old_commit: Oid,
-    new_commit: Oid,
+    old_commit: TransitOid,
+    new_commit: TransitOid,
     old_filename: String,
     new_filename: String,
     origin_line: u32,
     destination_line: u32,
     num_lines: u32,
+}
+
+#[derive(Debug)]
+struct TransitOid(Oid);
+impl Display for TransitOid {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        Display::fmt(&self.0, f)
+    }
+}
+
+impl rustc_serialize::Encodable for TransitOid {
+    fn encode<S: rustc_serialize::Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
+        s.emit_str(&format!("{}", self)[])
+    }
 }
