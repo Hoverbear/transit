@@ -16,6 +16,44 @@ Given a functioning Git repo this tool will attempt to do the following things:
 2. Attempt to match any deletions with any additions which match the same *signature* of code. This would correspond to a 'code move'.
 3. Ideally, this program would be able to account for relevant variable name changes without failing to detect the move.
 
+#### Installing `transit`
+
+> For Linux or Mac, with root! Windows users are, unfortunately, on their own.
+
+You will need the [Rust](http://rust-lang.org/) compiler:
+
+```bash
+curl -L https://static.rust-lang.org/rustup.sh | sudo sh
+```
+
+This should install `cargo` and `rustc`. Clone the repository and build it:
+
+```bash
+git clone git@github.com:Hoverbear/transit.git && \
+cd transit && \
+cargo build
+```
+
+Now you can run the binary on any repository, even itself!
+
+```bash
+./target/transit .
+```
+
+For JSON output, use `--json`
+
+#### Installing `transit-display`
+
+To use the (optional) output viewer, install `nodejs` and `npm` using your preferred package manager. `brew`, `pacman`, `apt`, and `yum` all have official packages and they will do. Then:
+
+```bash
+cd transit-display &&
+npm install &&
+npm start
+```
+
+Now visit `http://localhost:3000/transit` in your web browser to see some mock data. To query a repo use an invocation such as `http://localhost:3000/transit?repopath=../test/basic&repo=transit`. Where `repopath` is the path to your repository, and `repo` is the title of the project (for display only).
+
 ### Codebases to Analyze
 
 We will be using it on a few codebases including [Rust](github.com/rust-lang/rust), [Servo](https://github.com/servo/servo), [Gathering Our Voices](https://github.com/BCAAFC/Gathering-Our-Voices), [socket.io](http://socket.io/), [connect](https://github.com/senchalabs/connect).
