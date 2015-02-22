@@ -49,8 +49,8 @@ fn main() {
     if let (Some(old_string), Some(new_string)) = (args.arg_old, args.arg_new) {
         // Compare a specific commit pair.
         // Fist, get the commits. (Error checked)
-        let old = Oid::from_str(&old_string[]).and_then(|oid| repo.find_commit(oid));
-        let new = Oid::from_str(&new_string[]).and_then(|oid| repo.find_commit(oid));
+        let old = Oid::from_str(&old_string[..]).and_then(|oid| repo.find_commit(oid));
+        let new = Oid::from_str(&new_string[..]).and_then(|oid| repo.find_commit(oid));
         if old.is_ok() && new.is_ok() {
             let output = find_moves(&repo, &old.unwrap(), &new.unwrap()).unwrap();
             make_output(output);
@@ -73,14 +73,18 @@ fn main() {
         // We sadly must collect here to use `.windows()`
         let history = revwalk.filter_map(|id| repo.find_commit(id).ok())
             .collect::<Vec<Commit>>();
+        let mut output = vec![];
         // Walk through each pair of commits.
         for pair in history.windows(2) {let (old, new) = (&pair[1], &pair[0]);
-            let output = find_moves(&repo, old.clone(), new.clone()).unwrap();
-            if args.flag_json {
-                make_json(output);
-            } else {
-                make_output(output);
+            let detected = find_moves(&repo, old.clone(), new.clone()).unwrap();
+            for item in detected {
+                output.push(item);
             }
+        }
+        if args.flag_json {
+            make_json(output);
+        } else {
+            make_output(output);
         }
     }
 }
@@ -414,6 +418,6 @@ impl Display for TransitOid {
 
 impl rustc_serialize::Encodable for TransitOid {
     fn encode<S: rustc_serialize::Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
-        s.emit_str(&format!("{}", self)[])
+        s.emit_str(&format!("{}", self)[..])
     }
 }
