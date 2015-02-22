@@ -14,3 +14,6 @@ docopt = "*"
 git2 = "*"
 regex = "*"
 regex_macros = "*"
+
+# [dependencies.git2]
+# git = "https://github.com/alexcrichton/git2-rs/"

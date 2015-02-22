@@ -166,7 +166,11 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
     // It's a bit weird, but I think it will provide the necessary information.
     diff.print(DiffFormat::Patch, |delta, maybe_hunk, line| -> bool {
 
-        assert!(delta.nfiles() == 2, "This only works on diffs between exactly 2 files. Found {} files.", delta.nfiles());
+        // if delta.nfiles() != 2 {
+        //     // This is diff with only one side, and thus can't have a move.
+        //     return true;
+        // }
+        // assert!(delta.nfiles() == 2, "This only works on diffs between exactly 2 files. Found {} files.", delta.nfiles());
 
         // Thinking:
         //  * If is not a hunk, keep going.
@@ -326,7 +330,11 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
         if map.contains_key(&f.key) {
             let q = map.get(&f.key).unwrap();
 
-            assert!(f.state != q.state, "One state must be an addition and the other state must be a deletion.");
+            // If both states are added, there are no moves.
+            // assert!(f.state != q.state, format!("States {:?}, {:?}. Should be Addition/Deletion ", f.state, q.state));
+            if (f.state == q.state) {
+                return Ok(Vec::<Output>::new())
+            }
 
             let output: Output;
 
