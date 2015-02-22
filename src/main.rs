@@ -185,13 +185,20 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
         //dump_diffdelta(&delta);
         //dump_diffhunk(&maybe_hunk.unwrap());
 
-        old_path = delta.old_file().path().unwrap().clone();
-        new_path = delta.new_file().path().unwrap().clone();
+        old_path = match delta.old_file().path() {
+            Some(path) => path,
+            None => return false,
+        };
+        new_path = match delta.new_file().path() {
+            Some(path) => path,
+            None => return false,
+        };
 
         match line.origin() {
             // Additions
             '+' | '>' => {
-                added.push_str(str::from_utf8(line.content()).unwrap());
+                added.push_str(str::from_utf8(line.content())
+                    .ok().expect("Couldn't parse line content for added"));
 
                 match state {
                     State::Deletion => {
@@ -204,14 +211,20 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
                         });
                         deleted = String::new();
                         line_count = 0;
-                        start_position = line.new_lineno().unwrap();
+                        start_position = match line.new_lineno() {
+                            Some(lineno) => lineno,
+                            None => return false, // Can't be a move if deleted.
+                        }
                     },
                     State::Addition => {
                         line_count += 1;
                     },
                     State::Other => {
                         line_count = 1;
-                        start_position = line.new_lineno().unwrap();
+                        start_position = match line.new_lineno() {
+                            Some(lineno) => lineno,
+                            None => return false, // Can't be a move if deleted.
+                        }
                     },
                 }
 
@@ -220,7 +233,8 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
             },
             // Deletions
             '-' | '<' => {
-                deleted.push_str(str::from_utf8(line.content()).unwrap());
+                deleted.push_str(str::from_utf8(line.content())
+                    .ok().expect("Couldn't parse line content for deleted"));
 
                 match state {
                     State::Addition => {
@@ -233,14 +247,20 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
                         });
                         added = String::new();
                         line_count = 0;
-                        start_position = line.old_lineno().unwrap();
+                        start_position = match line.old_lineno() {
+                            Some(lineno) => lineno,
+                            None => return false, // Can't be a move if deleted.
+                        }
                     },
                     State::Deletion => {
                         line_count += 1;
                     },
                     State::Other => {
                         line_count = 1;
-                        start_position = line.old_lineno().unwrap();
+                        start_position = match line.old_lineno() {
+                            Some(lineno) => lineno,
+                            None => return false, // Can't be a move if deleted.
+                        }
                     },
                 }
 
