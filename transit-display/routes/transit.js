@@ -6,7 +6,7 @@ var router          = express.Router();
 function executeTransit(repo, from, to) {
     var deferred = q.defer();
     var cmd = '../target/transit';
-    var args = [ repo ];
+    var args = [ '--json', repo ];
     if( from && to) {
         args[1] = from;
         args[2] = to;
@@ -71,7 +71,7 @@ router.get('/', function (req, res, next) {
     var repoPath = req.query.repopath ? req.query.repopath : '';
     var oldCommit = req.query.oldcommit ? req.query.oldcommit : '';
     var newCommit = req.query.newcommit ? req.query.newcommit : '';
-    
+
     var mockDataDiffs = [
         {
             old_commit: 'Oid',
@@ -92,10 +92,10 @@ router.get('/', function (req, res, next) {
             num_lines: 'u322'
         }
     ];
-    
+
     if(repositoryName && repoPath) {
         console.log('calling transit with:', repoPath, oldCommit, newCommit);
-        
+
         executeTransit(repoPath, oldCommit ? oldCommit: null, newCommit ? newCommit : null)
             .then(function(diffs) {
                 renderOutput({
@@ -109,7 +109,7 @@ router.get('/', function (req, res, next) {
                     repository: repositoryName + 'failed to read repository: ' + repoPath + ' due to: ' + message,
                     diffs: []
                 });
-                
+
             });
     } else {
         //test mock up data
