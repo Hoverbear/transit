@@ -16,6 +16,8 @@ Given a functioning Git repo this tool will attempt to do the following things:
 2. Attempt to match any deletions with any additions which match the same *signature* of code. This would correspond to a 'code move'.
 3. Ideally, this program would be able to account for relevant variable name changes without failing to detect the move.
 
+Since we built a tool, we did not perform significant gathering of outside metrics. Instead, we generated several test repositories which we used to verify the functionality of our tool.
+
 #### Installing `transit`
 
 > For Linux or Mac, with root! Windows users are, unfortunately, on their own.
@@ -56,7 +58,14 @@ Now visit `http://localhost:3000/transit` in your web browser to see some mock d
 
 ### Codebases to Analyze
 
-We will be using it on a few codebases including [Rust](github.com/rust-lang/rust), [Servo](https://github.com/servo/servo), [Gathering Our Voices](https://github.com/BCAAFC/Gathering-Our-Voices), [socket.io](http://socket.io/), [connect](https://github.com/senchalabs/connect).
+You can try running `transit` on:
+
+* [capnproto-rust](https://github.com/dwrensha/capnproto-rust)
+* [rust-url](https://github.com/servo/rust-url)
+* [git2-rs](https://github.com/alexcrichton/git2-rs/)
+* [connect](https://github.com/senchalabs/connect)
+
+> Please note, it might take some time to run Transit on larger repos! We've bundled screenshotted outputs of some successful runs in `./examples_runs/`.
 
 ### Milestones
 

@@ -1,0 +1,472 @@
+
+
+[
+  {
+    "old_commit": "7b3733dcd6160884c71a1231b85b2ae08b045d4f",
+    "new_commit": "e5fe66df189d39e2ef58a6644599d326ff4e69d9",
+    "old_filename": "src\/capnp\/lib.rs",
+    "new_filename": "src\/capnp\/private\/layout.rs",
+    "origin_line": 1,
+    "destination_line": 1,
+    "num_lines": 108
+  },
+  {
+    "old_commit": "7b3733dcd6160884c71a1231b85b2ae08b045d4f",
+    "new_commit": "e5fe66df189d39e2ef58a6644599d326ff4e69d9",
+    "old_filename": "src\/capnp\/private\/layout.rs",
+    "new_filename": "src\/capnp\/private\/layout.rs",
+    "origin_line": 27,
+    "destination_line": 22,
+    "num_lines": 2
+  },
+  {
+    "old_commit": "7b3733dcd6160884c71a1231b85b2ae08b045d4f",
+    "new_commit": "e5fe66df189d39e2ef58a6644599d326ff4e69d9",
+    "old_filename": "src\/capnp\/private\/endian.rs",
+    "new_filename": "src\/capnp\/private\/mod.rs",
+    "origin_line": 1,
+    "destination_line": 1,
+    "num_lines": 71
+  },
+  {
+    "old_commit": "7b3733dcd6160884c71a1231b85b2ae08b045d4f",
+    "new_commit": "e5fe66df189d39e2ef58a6644599d326ff4e69d9",
+    "old_filename": "src\/capnp\/lib.rs",
+    "new_filename": "src\/capnp\/private\/mod.rs",
+    "origin_line": 58,
+    "destination_line": 30,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "1ebe033893db2e4492032ad684c4a4c36e3bf945",
+    "new_commit": "e14985829378ec74382bdadb1601aa7082a9b6c9",
+    "old_filename": "src\/capnp\/arena.rs",
+    "new_filename": "src\/capnp\/arena.rs",
+    "origin_line": 230,
+    "destination_line": 231,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "1ebe033893db2e4492032ad684c4a4c36e3bf945",
+    "new_commit": "e14985829378ec74382bdadb1601aa7082a9b6c9",
+    "old_filename": "src\/capnp\/arena.rs",
+    "new_filename": "src\/capnp\/arena.rs",
+    "origin_line": 265,
+    "destination_line": 266,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "6d6d6b8d8ae9567e1560ffa709d2a325113fc289",
+    "new_commit": "7f8d7f8da9c4e00a6c8ddfbd929a3998acda0a45",
+    "old_filename": "capnpc-rust\/codegen.rs",
+    "new_filename": "capnpc-rust\/codegen.rs",
+    "origin_line": 240,
+    "destination_line": 241,
+    "num_lines": 2
+  },
+  {
+    "old_commit": "66cd58556c92a1f2edba0571219dc1ec4413db85",
+    "new_commit": "999c7c290b97d4385eea0f8ec22891d0dfd6d41e",
+    "old_filename": "examples\/zmq-explorers\/viewer.rs",
+    "new_filename": "examples\/zmq-explorers\/viewer.rs",
+    "origin_line": 62,
+    "destination_line": 60,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "f174a30266308e1640c86199d221742f6843b29a",
+    "new_commit": "328cef3f5842b972a70eda810a404786a7739382",
+    "old_filename": "capnp-rpc\/rpc.rs",
+    "new_filename": "capnp-rpc\/rpc.rs",
+    "origin_line": 540,
+    "destination_line": 537,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "716ecdff920d5454161b02284de16fec9be7e65e",
+    "new_commit": "47dec6ae8270285475857f17f9cd2fb8202c52a4",
+    "old_filename": "capnpc-rust\/main.rs",
+    "new_filename": "capnpc-rust\/main.rs",
+    "origin_line": 1314,
+    "destination_line": 1321,
+    "num_lines": 3
+  },
+  {
+    "old_commit": "00db0b07ab1b69afcce3324f18d514d82160e8cd",
+    "new_commit": "c754f425cb743510397e7bb27e7e9855b2156166",
+    "old_filename": "capnpc-rust\/main.rs",
+    "new_filename": "capnpc-rust\/main.rs",
+    "origin_line": 1006,
+    "destination_line": 1058,
+    "num_lines": 4
+  },
+  {
+    "old_commit": "106e08151e9ccb7be5589cc10ae920da53fb1a75",
+    "new_commit": "affd85942cf51a42d1e2dc3943b3cd604e5c6e9f",
+    "old_filename": "capnp-rpc\/lib.rs",
+    "new_filename": "examples\/calculator\/main.rs",
+    "origin_line": 1,
+    "destination_line": 1,
+    "num_lines": 120
+  },
+  {
+    "old_commit": "b7e2da3d4769c211ec4cd6e6e7f2459803d12c11",
+    "new_commit": "397b1f4987c394e81135f3a2e8887de517d14cef",
+    "old_filename": "capnp-rpc\/rpc.rs",
+    "new_filename": "capnp-rpc\/rpc.rs",
+    "origin_line": 281,
+    "destination_line": 284,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "b7e2da3d4769c211ec4cd6e6e7f2459803d12c11",
+    "new_commit": "397b1f4987c394e81135f3a2e8887de517d14cef",
+    "old_filename": "capnp\/arena.rs",
+    "new_filename": "capnp\/arena.rs",
+    "origin_line": 368,
+    "destination_line": 368,
+    "num_lines": 2
+  },
+  {
+    "old_commit": "1c9148bc7f6add1d2e3931e51594bf123318524e",
+    "new_commit": "bba21ee16ce13dfc39410e799d014bd5e7a25174",
+    "old_filename": "capnp-rpc\/rpc.rs",
+    "new_filename": "capnp-rpc\/rpc.rs",
+    "origin_line": 100,
+    "destination_line": 111,
+    "num_lines": 4
+  },
+  {
+    "old_commit": "1c9148bc7f6add1d2e3931e51594bf123318524e",
+    "new_commit": "bba21ee16ce13dfc39410e799d014bd5e7a25174",
+    "old_filename": "capnp-rpc\/rpc.rs",
+    "new_filename": "capnp-rpc\/rpc.rs",
+    "origin_line": 106,
+    "destination_line": 117,
+    "num_lines": 8
+  },
+  {
+    "old_commit": "cb0c329abbfba472783772cfa7ea001a8fb22273",
+    "new_commit": "6c46dc37013008a95eed476bc246ffb58fb4ac42",
+    "old_filename": "examples\/zmq-explorers\/collector.rs",
+    "new_filename": "examples\/zmq-explorers\/collector.rs",
+    "origin_line": 54,
+    "destination_line": 54,
+    "num_lines": 5
+  },
+  {
+    "old_commit": "cb0c329abbfba472783772cfa7ea001a8fb22273",
+    "new_commit": "6c46dc37013008a95eed476bc246ffb58fb4ac42",
+    "old_filename": "examples\/zmq-explorers\/collector.rs",
+    "new_filename": "examples\/zmq-explorers\/collector.rs",
+    "origin_line": 61,
+    "destination_line": 61,
+    "num_lines": 4
+  },
+  {
+    "old_commit": "9c8064653ebde5f01604b1122588f04b0052c74d",
+    "new_commit": "276f52a6187dc8191ef5a8f3eb42d177c69b9204",
+    "old_filename": "capnp\/message.rs",
+    "new_filename": "capnp\/message.rs",
+    "origin_line": 126,
+    "destination_line": 114,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "cebe5bd60c2050be0bd325ab2a2107e5b9706089",
+    "new_commit": "30b75b436ca508e70b2dfbee97ccdbffd5f7ac0a",
+    "old_filename": "capnp\/serialize.rs",
+    "new_filename": "capnp\/serialize.rs",
+    "origin_line": 21,
+    "destination_line": 21,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "dc745b852485308cc5b7ae021c46facc0916d298",
+    "new_commit": "bc852c0377e4a54bf8843a70d6744ef0c8d21d26",
+    "old_filename": "capnpc-rust\/test.rs",
+    "new_filename": "capnpc-rust\/test.rs",
+    "origin_line": 135,
+    "destination_line": 136,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "88fc7bfa5a7a244b25117cd0d2e296fbd72e68dd",
+    "new_commit": "c8fe72a6949bc708a9074bbdd8405286891d5b90",
+    "old_filename": "examples\/zmq-explorers\/explorers.capnp",
+    "new_filename": "examples\/zmq-explorers\/explorers.capnp",
+    "origin_line": 25,
+    "destination_line": 18,
+    "num_lines": 4
+  },
+  {
+    "old_commit": "3697c61948b5cfb9e35625668be090e1f96f4199",
+    "new_commit": "3febd037c2a24c1befc1275e3db9138985204a0e",
+    "old_filename": "examples\/zmq-explorers\/collector.rs",
+    "new_filename": "examples\/zmq-explorers\/collector.rs",
+    "origin_line": 29,
+    "destination_line": 42,
+    "num_lines": 5
+  },
+  {
+    "old_commit": "3697c61948b5cfb9e35625668be090e1f96f4199",
+    "new_commit": "3febd037c2a24c1befc1275e3db9138985204a0e",
+    "old_filename": "examples\/zmq-explorers\/collector.rs",
+    "new_filename": "examples\/zmq-explorers\/collector.rs",
+    "origin_line": 64,
+    "destination_line": 74,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "3697c61948b5cfb9e35625668be090e1f96f4199",
+    "new_commit": "3febd037c2a24c1befc1275e3db9138985204a0e",
+    "old_filename": "examples\/zmq-explorers\/collector.rs",
+    "new_filename": "examples\/zmq-explorers\/collector.rs",
+    "origin_line": 67,
+    "destination_line": 77,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "3697c61948b5cfb9e35625668be090e1f96f4199",
+    "new_commit": "3febd037c2a24c1befc1275e3db9138985204a0e",
+    "old_filename": "examples\/zmq-explorers\/collector.rs",
+    "new_filename": "examples\/zmq-explorers\/collector.rs",
+    "origin_line": 70,
+    "destination_line": 80,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "1cfa4c9daa7b3fd2444ac318043c55bae75ab059",
+    "new_commit": "6864b5271523ba26d486dfb19ebe5c7a40cf0f89",
+    "old_filename": "samples\/addressbook\/addressbook.rs",
+    "new_filename": "examples\/addressbook\/addressbook.rs",
+    "origin_line": 1,
+    "destination_line": 1,
+    "num_lines": 35
+  },
+  {
+    "old_commit": "1cfa4c9daa7b3fd2444ac318043c55bae75ab059",
+    "new_commit": "6864b5271523ba26d486dfb19ebe5c7a40cf0f89",
+    "old_filename": "samples\/addressbook\/addressbook.rs",
+    "new_filename": "samples\/addressbook\/addressbook.capnp",
+    "origin_line": 1,
+    "destination_line": 1,
+    "num_lines": 111
+  },
+  {
+    "old_commit": "6d15060d8c821c2937904550287032486d1ec0ba",
+    "new_commit": "1cfa4c9daa7b3fd2444ac318043c55bae75ab059",
+    "old_filename": "samples\/addressbook.rs",
+    "new_filename": "samples\/addressbook\/addressbook.rs",
+    "origin_line": 1,
+    "destination_line": 1,
+    "num_lines": 35
+  },
+  {
+    "old_commit": "6d15060d8c821c2937904550287032486d1ec0ba",
+    "new_commit": "1cfa4c9daa7b3fd2444ac318043c55bae75ab059",
+    "old_filename": "samples\/addressbook\/addressbook.capnp",
+    "new_filename": "samples\/addressbook\/addressbook.rs",
+    "origin_line": 1,
+    "destination_line": 1,
+    "num_lines": 111
+  },
+  {
+    "old_commit": "eaec782e890cdba97e11559296ca75bc3dccf6bb",
+    "new_commit": "89b7cba26d08af7a2499253198db560341750ced",
+    "old_filename": "capnpc-rust\/test.rs",
+    "new_filename": "capnpc-rust\/test.rs",
+    "origin_line": 176,
+    "destination_line": 176,
+    "num_lines": 5
+  },
+  {
+    "old_commit": "dd2fd07fbcfae5a3082dc3a06a3e9cf0eff47366",
+    "new_commit": "eaec782e890cdba97e11559296ca75bc3dccf6bb",
+    "old_filename": "capnpc-rust\/test.rs",
+    "new_filename": "capnpc-rust\/test.rs",
+    "origin_line": 116,
+    "destination_line": 117,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "149007230769002ad3048a3196ed289069e018a0",
+    "new_commit": "ac7b2f54d18ad0fd8228a3354619b0ceb9d36f1c",
+    "old_filename": "capnp\/serialize.rs",
+    "new_filename": "capnp\/serialize.rs",
+    "origin_line": 130,
+    "destination_line": 136,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "984eb95e1b1890c23b12cf103b6cfd2022837317",
+    "new_commit": "24ff5fb8bd3b3f74d38daf6112199cf8b8c8e3ab",
+    "old_filename": "capnpc-rust\/main.rs",
+    "new_filename": "capnpc-rust\/main.rs",
+    "origin_line": 539,
+    "destination_line": 493,
+    "num_lines": 4
+  },
+  {
+    "old_commit": "1714f2b4af67703ea95dec79c22256ebdcc5858f",
+    "new_commit": "9c1687cc9c20d8e2a286041453a3048b257f5755",
+    "old_filename": "capnp\/layout.rs",
+    "new_filename": "capnp\/layout.rs",
+    "origin_line": 1334,
+    "destination_line": 1328,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "1714f2b4af67703ea95dec79c22256ebdcc5858f",
+    "new_commit": "9c1687cc9c20d8e2a286041453a3048b257f5755",
+    "old_filename": "capnp\/layout.rs",
+    "new_filename": "capnp\/layout.rs",
+    "origin_line": 1336,
+    "destination_line": 1330,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "1714f2b4af67703ea95dec79c22256ebdcc5858f",
+    "new_commit": "9c1687cc9c20d8e2a286041453a3048b257f5755",
+    "old_filename": "capnp\/layout.rs",
+    "new_filename": "capnp\/layout.rs",
+    "origin_line": 1340,
+    "destination_line": 1334,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "1714f2b4af67703ea95dec79c22256ebdcc5858f",
+    "new_commit": "9c1687cc9c20d8e2a286041453a3048b257f5755",
+    "old_filename": "capnp\/layout.rs",
+    "new_filename": "capnp\/layout.rs",
+    "origin_line": 1342,
+    "destination_line": 1336,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "1254017f1c165ea483f19bc88761e504b8129546",
+    "new_commit": "a0899430cce87bf18c2e76703a6431b45c7f3738",
+    "old_filename": "capnp\/layout.rs",
+    "new_filename": "capnp\/layout.rs",
+    "origin_line": 280,
+    "destination_line": 280,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "efb7433e5ec64238a9be25195a6c5ab49eec5721",
+    "new_commit": "c8863ed21fdc6b398903f9efc2cdefebc3fdd474",
+    "old_filename": "compiler\/main.rs",
+    "new_filename": "compiler\/main.rs",
+    "origin_line": 1,
+    "destination_line": 1,
+    "num_lines": 999
+  },
+  {
+    "old_commit": "0fc1d8ace7552a51439cb5a0594e10d37ad12228",
+    "new_commit": "eeb086d264c4d9b26bea255be0025c8629b8c788",
+    "old_filename": "capnprust\/message.rs",
+    "new_filename": "capnprust\/message.rs",
+    "origin_line": 83,
+    "destination_line": 80,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "0fc1d8ace7552a51439cb5a0594e10d37ad12228",
+    "new_commit": "eeb086d264c4d9b26bea255be0025c8629b8c788",
+    "old_filename": "capnprust\/message.rs",
+    "new_filename": "capnprust\/message.rs",
+    "origin_line": 95,
+    "destination_line": 96,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "b0d017adeccc9ed723513a7e98bbeb270150815a",
+    "new_commit": "4f5426e406760d828e10a0d807afcfc017e7ac17",
+    "old_filename": "capnprust\/layout.rs",
+    "new_filename": "capnprust\/layout.rs",
+    "origin_line": 325,
+    "destination_line": 397,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "8e4f041a091f5fb3d9162bbeacecca85bdcf38f1",
+    "new_commit": "e2d7a51cea87d3d7c3b8df12cea0d642d0a1403a",
+    "old_filename": "compiler\/capnpc-rust.rs",
+    "new_filename": "compiler\/capnpc-rust.rs",
+    "origin_line": 558,
+    "destination_line": 559,
+    "num_lines": 2
+  },
+  {
+    "old_commit": "4f78000a6525dd18d10a02edf266c5cbe08132d7",
+    "new_commit": "9bc503d50cd4eb10e2903fd39ba73618a2166776",
+    "old_filename": "compiler\/schema_capnp.rs",
+    "new_filename": "compiler\/schema_capnp.rs",
+    "origin_line": 996,
+    "destination_line": 961,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "ff936e9bc9e9494bc5c7295c3092a56ba0be65b4",
+    "new_commit": "45d733507cfc43efd707dd2e6bb8884c76a043e6",
+    "old_filename": "samples\/addressbook.rc",
+    "new_filename": "samples\/addressbook.rc",
+    "origin_line": 44,
+    "destination_line": 47,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "d4c672b0ef7c215bdd7bd34c192099322c60a382",
+    "new_commit": "3d1aad44ee2f7c2e73cb1f638b0a39212abd49b1",
+    "old_filename": "schema_capnp.rs",
+    "new_filename": "schema_capnp.rs",
+    "origin_line": 682,
+    "destination_line": 660,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "4ee01c1b8a484d3b293a6eb19c19ce4a14723e5e",
+    "new_commit": "8f32fe61b408e0a9f57bfd87fc8115b5c6f1a896",
+    "old_filename": "serialize_packed.rs",
+    "new_filename": "serialize_packed.rs",
+    "origin_line": 92,
+    "destination_line": 117,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "301cca06b7b17d4da30733d927f23305d1256025",
+    "new_commit": "71e15671b8082e9b8659b34e2b45cfc1d3a524fb",
+    "old_filename": "capnpc-rust.rc",
+    "new_filename": "capnprust.rc",
+    "origin_line": 9,
+    "destination_line": 12,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "b89518325003c52fca528fa1c98a2e00ceb96dc7",
+    "new_commit": "adda99660d05d681cb5e206c4e5bb6a314fb371b",
+    "old_filename": "layout.rs",
+    "new_filename": "layout.rs",
+    "origin_line": 254,
+    "destination_line": 249,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "b89518325003c52fca528fa1c98a2e00ceb96dc7",
+    "new_commit": "adda99660d05d681cb5e206c4e5bb6a314fb371b",
+    "old_filename": "layout.rs",
+    "new_filename": "layout.rs",
+    "origin_line": 256,
+    "destination_line": 251,
+    "num_lines": 1
+  },
+  {
+    "old_commit": "4e14f3e961e2eb6edd65187bcc0b42c083997fe1",
+    "new_commit": "7543d5d48a3ddad7f4f28b2cc36c79e6ff0f7e0b",
+    "old_filename": "capnpc-rust.rc",
+    "new_filename": "capnpc-rust.rc",
+    "origin_line": 7,
+    "destination_line": 12,
+    "num_lines": 1
+  }
+]
