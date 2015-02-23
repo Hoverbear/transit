@@ -31,17 +31,6 @@ function executeTransit(repo, from, to) {
 
             console.log("transit:", transitOutput);
             deferred.resolve(JSON.parse(transitOutput));
-            // load file contents
-            //fs.readFile(calendarFileName + postfix, {encoding: 'utf8'}, function(err, data) {
-            //    if (err) {
-            //        log.error(err);
-            //        deferred.reject(err);
-            //    } else {
-            //        fileContents = data;
-            //        log.info("calendar generation succeeded!");
-            //        deferred.resolve({contents: fileContents, fileName: calendarFileName + postfix});
-            //    }
-            //});
 
         } else {
             console.log("ERROR: transit execution failed!");
@@ -54,8 +43,7 @@ function executeTransit(repo, from, to) {
 /* GET transit page. */
 router.get('/', function (req, res, next) {
     var diffs;
-    // TODO: get data to display
-    // TODO: format data into the output object
+
     console.log("req:", req.query);
     /* example output
      * struct Output {
@@ -106,7 +94,7 @@ router.get('/', function (req, res, next) {
             }, function inCaseOfFailure(message) {
                 renderOutput({
                     title: 'transit express',
-                    repository: repositoryName + 'failed to read repository: ' + repoPath + ' due to: ' + message,
+                    repository: repositoryName + ' -- failed to read repository: ' + repoPath + ' due to: ' + message,
                     diffs: []
                 });
 
