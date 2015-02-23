@@ -78,6 +78,7 @@ fn main() {
         for pair in history.windows(2) {let (old, new) = (&pair[1], &pair[0]);
             let detected = find_moves(&repo, old.clone(), new.clone()).unwrap();
             for item in detected {
+                if item.num_lines == 0 { continue };
                 output.push(item);
             }
         }
