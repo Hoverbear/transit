@@ -110,8 +110,8 @@ Some of the detected moves where not simple refactoring but changes that would h
 Team Member | Github Account
 ----------- | --------------
 Andrew Hobden | @hoverbear
-Brody Holden | @fraserd
-Fraser DeLisle | @BrodyHolden
+Brody Holden | @BrodyHolden
+Fraser DeLisle | @fraserd
 
 Date | Milestone | Complete
 ----------- | ------------- | -----
