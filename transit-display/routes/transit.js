@@ -15,20 +15,18 @@ function executeTransit(repo, from, to) {
     var transitOutput = "";
     var transitErr    = "";
 
-    var kinderProcess = child.spawn(cmd, args)
-        .on('error', function (error) {
-            console.log("error spawning child process:", error); 
-            deferred.reject({msg: 'transit executable failed to run.', code: error})
-        })
-        .stdout.on('data', function (data) {
+    var kinderProcess = child.spawn(cmd, args);
+    kinderProcess.stdout.on('data', function (data) {
             process.stdout.write(data.toString('utf8'));
             transitOutput += data;
-        })
-        .stderr.on('data', function (data) {
+        });
+
+    kinderProcess.stderr.on('data', function (data) {
             console.log('stderr: ' + data.toString('utf8'));
             transitErr += data;
-        })
-        .on('close', function (code) {
+        });
+
+    kinderProcess.on('close', function (code) {
             console.log('child process exited with code ' + code);
             if (code === 0) {
                 console.log("transit ok");
@@ -40,6 +38,11 @@ function executeTransit(repo, from, to) {
                 console.log("ERROR: transit execution failed!");
                 deferred.reject({msg: transitErr, code: code})
             }
+        });
+
+    kinderProcess.on('error', function (error) {
+            console.log("error spawning child process:", error);
+            deferred.reject({msg: 'transit (' + cmd + ') executable failed to run.', code: error})
         });
     return deferred.promise;
 }
