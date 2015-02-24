@@ -2,8 +2,6 @@
 
 [Class Project]
 
-[Incomplete]
-
 ### Project Question
 
 > As developers, we commonly restructure our code. This is usually done in one commit (otherwise it's sloppy). Can we track when different parts of codebases undergo "movement" during refactoring?
