@@ -13,7 +13,8 @@ function executeTransit(repo, from, to) {
     }
     var kinderProcess = child.spawn(cmd, args);
     var fileContents;
-    var transitOutput = "";
+    var transitOutput = ""
+    ,   transitErr    = "";
 
     kinderProcess.stdout.on('data', function (data) {
         process.stdout.write(data.toString('utf8'));
@@ -22,6 +23,7 @@ function executeTransit(repo, from, to) {
 
     kinderProcess.stderr.on('data', function (data) {
         console.log('stderr: ' + data.toString('utf8'));
+        transitErr += data;
     });
 
     kinderProcess.on('close', function (code) {
@@ -34,7 +36,7 @@ function executeTransit(repo, from, to) {
 
         } else {
             console.log("ERROR: transit execution failed!");
-            deferred.reject({msg: "transit execution failed!", code: code})
+            deferred.reject({msg: transitErr, code: code})
         }
     });
     return deferred.promise;
@@ -91,13 +93,9 @@ router.get('/', function (req, res, next) {
                     repository: repositoryName,
                     diffs: diffs
                 });
-            }, function inCaseOfFailure(message) {
-                renderOutput({
-                    title: 'transit express',
-                    repository: repositoryName + ' -- failed to read repository: ' + repoPath + ' due to: ' + message,
-                    diffs: []
-                });
-
+            })
+            .catch(function inCaseOfFailure(message) {
+                res.render('error', { message: message });
             });
     } else {
         //test mock up data
