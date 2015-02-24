@@ -119,7 +119,7 @@ February 21 | Document findings | Yes
 February 22 | Finalized report | Yes
 February 23 | Submit final project | Yes
 
-Work tasks were tracked in issue [#2](https://github.com/Hoverbear/transit/issues/2).
+A break down of which work tasks were completed by which team members is tracked in issue [#2](https://github.com/Hoverbear/transit/issues/2).
 
 ### Resources
 
