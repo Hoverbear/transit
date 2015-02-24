@@ -6,7 +6,7 @@
 
 ### Project Question
 
-> As developers, we commonly restructure our code. This is usually done in one commit (otherwise it's sloppy). How often do different parts of codebases undergo "movement" during refactoring? What is the overall complexity cost of maintaining a familiarity with a given system undergoing these changes?
+> As developers, we commonly restructure our code. This is usually done in one commit (otherwise it's sloppy). Can we track when different parts of codebases undergo "movement" during refactoring?
 
 ### Methodology
 
@@ -15,6 +15,8 @@ Given a functioning Git repo this tool will attempt to do the following things:
 1. Analyze each diff.
 2. Attempt to match any deletions with any additions which match the same *signature* of code. This would correspond to a 'code move'.
 3. Ideally, this program would be able to account for relevant variable name changes without failing to detect the move.
+
+> Accounting for changes in variable names is not yet implemented.
 
 Since we built a tool, we did not perform significant gathering of outside metrics. Instead, we generated several test repositories which we used to verify the functionality of our tool.
 
@@ -60,18 +62,52 @@ From there you can:
 * Query a repo use an invocation such as `http://localhost:3000/transit?repopath=../test/basic&repo=transit`. Where `repopath` is the path to your repository, and `repo` is the title of the project (for display only).
 * Visit `http://localhost:3000/select` to choose a repository.
 
-### Codebases to Analyze
+### Results
 
-You can try running `transit` on:
+We ran `transit` against the following repositories:
 
 * [capnproto-rust](https://github.com/dwrensha/capnproto-rust)
 * [rust-url](https://github.com/servo/rust-url)
 * [git2-rs](https://github.com/alexcrichton/git2-rs/)
 * [connect](https://github.com/senchalabs/connect)
 
-> Please note, it might take some time to run Transit on larger repos! We've bundled screenshotted outputs of some successful runs in `./examples_runs/`.
+The outputs are stored in `./examples_runs/`.
 
-### Milestones
+### Analysis
+
+## capnproto-rust
+
+Due to the length of the output, the results from `capnproto-rust` is stored in a [json](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/capn-proto.json) file.
+
+Transit found 52 moves in this repository. Of those 52 moves, 30 were single line moves.
+
+## rust-url
+
+![Image of output from transit ran against rust-url](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/rust-url.png)
+
+Transit found 8 moves in this repository. Of those 8 moves, 1 was a single line move. The majority of these moves were 100+ lines of code.
+
+On closer inspection, the 3 line move in commit https://github.com/servo/rust-url@a1fdd28ec7761777c6d075bfe9974150a24c4d34 is actually a change in logic.
+
+## git2-rs
+
+![Image of output from transit ran against git2-rs](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/git2-rs.png)
+
+Transit found 7 moves in this repository. Of those 7 moves, two were single line moves.
+
+## connect
+
+![Image of output from transit ran against connect](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/connect.png)
+
+Transit found 91 moves in this repository. Of those 91 moves, 42 were single line moves.
+
+## Overall
+
+Transit is successful in detecting code moves.
+
+Some of the detected moves where not simple refactoring but changes that would have changed the logic of the analyzed programs. It is worth noting that beyond our small test data, we did not check the percentage of moves that were not detected by `transit`.
+
+### Project Management - Milestones
 
 Date | Milestone | Complete
 ----------- | ------------- | -----
@@ -79,11 +115,13 @@ February 3 | Initial prototype of project system | Yes
 February 10 | Well-defined project output | Yes
 February 12 | Feature freeze | Yes
 February 17 | Complete refactor identification functionality | Yes
-February 19 | Complete testing & release version 1.0 | In progress
-February 21 | Complete analysis of target codebases |
-February 21 | Document findings |
-February 22 | Finalized report |
-February 23 | Submit final project |
+February 19 | Complete testing & release version 1.0 | Yes
+February 21 | Complete analysis of target codebases | Yes
+February 21 | Document findings | Yes
+February 22 | Finalized report | Yes
+February 23 | Submit final project | Yes
+
+Work tasks were tracked in issue #2.
 
 ### Resources
 
