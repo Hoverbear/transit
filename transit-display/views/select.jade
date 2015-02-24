@@ -1,0 +1,18 @@
+extends layout
+block content
+    h1= title
+    p.
+        Welcome to #{title}
+        Select a repository path.
+    div.container(style="margin: 0;")
+        div#repository
+            strong source repository:
+            form#submitForm(action='/transit')
+                input#repositoryPath(name='repo')
+                input#repositoryPath(name='repopath')
+               
+                input(type='submit')
+            p
+    p done
+script
+    = $('#submitForm').on('submit', function(event) { console.log('submit button clicked.') })
