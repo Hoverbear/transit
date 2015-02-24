@@ -7,15 +7,15 @@ block content
     div.container(style="margin: 0;")
         div#repository
             h3 Choose a Repository:
-            form#submitForm(action='/transit')
+            form#submitForm(method="GET" action='/transit')
                 .form-group
                     label Repo Title (Optional)
-                    input.form-control#repositoryPath(name='repo')
+                    input.form-control#repositoryPath(type="text" name='repo')
                 .form-group
                     label Repository Path (As a file path, eg. `/home/f/git/foobar`)
-                    input.form-control#repositoryPath(name='repopath' required)
-               .form-group
+                    input.form-control#repositoryPath(type="text" name='repopath' required)
+                .form-group
                     input.form-control(type='submit')
             p
 script
-    = $('#submitForm').on('submit', function(event) { console.log('submit button clicked.') })
+    //- = $('#submitForm').on('submit', function(event) { console.log('submit button clicked.') })
