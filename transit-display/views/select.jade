@@ -1,21 +1,30 @@
 extends layout
 block content
-    h1= title
-    p.
-        Welcome to #{title}
-        Select a repository path.
     div.container(style="margin: 0;")
+        h1= title
+        p.
+            Welcome to #{title}
+
         div#repository
             h3 Choose a Repository:
-            form#submitForm(method="GET" action='/transit')
-                .form-group
-                    label Repo Title (Optional)
-                    input.form-control#repositoryPath(type="text" name='repo')
-                .form-group
-                    label Repository Path (As a file path, eg. `/home/f/git/foobar`)
-                    input.form-control#repositoryPath(type="text" name='repopath' required)
-                .form-group
-                    input.form-control(type='submit')
             p
-script
-    //- = $('#submitForm').on('submit', function(event) { console.log('submit button clicked.') })
+            form#submitForm(method="GET" action='/transit')
+
+                div.row.form-group
+                    div.col-xs-3.right-align
+                        label Repo Title
+                    div.col-xs-4
+                        input#repositoryPath(type="text" name='repo' autofocus='true' required).full-width.form-control
+                    div.col-xs-offset-5
+                div.row.form-group
+                    div.col-xs-3.right-align
+                        label Repository Path (As a file path, eg. `/home/f/git/foobar`)
+                    div.col-xs-4
+                        input#repositoryPath(type="text" name='repopath' required=).full-width.form-control
+                    div.col-xs-offset-4
+                div.row.form-group
+                    div.col-xs-3
+                    div.col-xs-4.right-align
+                        input(type='submit').btn.btn-default.btn-primary.btn-lg
+                    div.col-xs-offset-5
+            p

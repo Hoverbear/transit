@@ -11,34 +11,39 @@ function executeTransit(repo, from, to) {
         args[1] = from;
         args[2] = to;
     }
-    var kinderProcess = child.spawn(cmd, args);
-    var fileContents;
-    var transitOutput = ""
-    ,   transitErr    = "";
+    
+    var transitOutput = "";
+    var transitErr    = "";
 
+    var kinderProcess = child.spawn(cmd, args);
     kinderProcess.stdout.on('data', function (data) {
-        process.stdout.write(data.toString('utf8'));
-        transitOutput += data;
-    });
+            process.stdout.write(data.toString('utf8'));
+            transitOutput += data;
+        });
 
     kinderProcess.stderr.on('data', function (data) {
-        console.log('stderr: ' + data.toString('utf8'));
-        transitErr += data;
-    });
+            console.log('stderr: ' + data.toString('utf8'));
+            transitErr += data;
+        });
 
     kinderProcess.on('close', function (code) {
-        console.log('child process exited with code ' + code);
-        if (code === 0) {
-            console.log("transit ok");
+            console.log('child process exited with code ' + code);
+            if (code === 0) {
+                console.log("transit ok");
+    
+                console.log("transit:", transitOutput);
+                deferred.resolve(JSON.parse(transitOutput));
+    
+            } else {
+                console.log("ERROR: transit execution failed!");
+                deferred.reject({msg: transitErr, code: code})
+            }
+        });
 
-            console.log("transit:", transitOutput);
-            deferred.resolve(JSON.parse(transitOutput));
-
-        } else {
-            console.log("ERROR: transit execution failed!");
-            deferred.reject({msg: transitErr, code: code})
-        }
-    });
+    kinderProcess.on('error', function (error) {
+            console.log("error spawning child process:", error);
+            deferred.reject({msg: 'transit (' + cmd + ') executable failed to run.', code: error})
+        });
     return deferred.promise;
 }
 

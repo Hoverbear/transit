@@ -3,6 +3,15 @@ body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
+.right-align {
+  horiz-align: right;
+  text-align: right;
+}
+
+.full-width {
+  width: 100%;
+}
+
 a {
   color: #00B7FF;
 }
