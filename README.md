@@ -75,13 +75,13 @@ The outputs are stored in `./examples_runs/`.
 
 ### Analysis
 
-## capnproto-rust
+#### capnproto-rust
 
 Due to the length of the output, the results from `capnproto-rust` is stored in a [json](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/capn-proto.json) file.
 
 Transit found 52 moves in this repository. Of those 52 moves, 30 were single line moves.
 
-## rust-url
+#### rust-url
 
 ![Image of output from transit ran against rust-url](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/rust-url.png)
 
@@ -89,19 +89,19 @@ Transit found 8 moves in this repository. Of those 8 moves, 1 was a single line 
 
 On closer inspection, the 3 line move in commit https://github.com/servo/rust-url@a1fdd28ec7761777c6d075bfe9974150a24c4d34 is actually a change in logic.
 
-## git2-rs
+#### git2-rs
 
 ![Image of output from transit ran against git2-rs](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/git2-rs.png)
 
 Transit found 7 moves in this repository. Of those 7 moves, two were single line moves.
 
-## connect
+#### connect
 
 ![Image of output from transit ran against connect](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/connect.png)
 
 Transit found 91 moves in this repository. Of those 91 moves, 42 were single line moves.
 
-## Overall
+#### Overall
 
 Transit is successful in detecting code moves.
 
