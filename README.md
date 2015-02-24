@@ -54,7 +54,11 @@ npm install &&
 npm start
 ```
 
-Now visit `http://localhost:3000/transit` in your web browser to see some mock data. To query a repo use an invocation such as `http://localhost:3000/transit?repopath=../test/basic&repo=transit`. Where `repopath` is the path to your repository, and `repo` is the title of the project (for display only).
+From there you can:
+
+* Visit `http://localhost:3000/transit` in your web browser to see some mock data.
+* Query a repo use an invocation such as `http://localhost:3000/transit?repopath=../test/basic&repo=transit`. Where `repopath` is the path to your repository, and `repo` is the title of the project (for display only).
+* Visit `http://localhost:3000/select` to choose a repository.
 
 ### Codebases to Analyze
 
