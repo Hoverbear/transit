@@ -12,7 +12,7 @@ block content
 
                 div.row.form-group
                     div.col-xs-3.right-align
-                        label Repo Title
+                        label Repository Title
                     div.col-xs-4
                         input#repositoryPath(type="text" name='repo' autofocus='true' required).full-width.form-control
                     div.col-xs-offset-5
@@ -24,7 +24,18 @@ block content
                     div.col-xs-offset-4
                 div.row.form-group
                     div.col-xs-3
+                        
                     div.col-xs-4.right-align
-                        input(type='submit').btn.btn-default.btn-primary.btn-lg
+                        input#goButton(type='submit').btn.btn-default.btn-primary.btn-lg
+                        div#message(style="display: none;")
+                            span#loadingIcon.glyphicon.glyphicon-refresh.glyphicon-refresh-animate
+                            span(style='margin-left: 5px;') Please wait; loading transit...
                     div.col-xs-offset-5
             p
+            
+        script.
+            $('#submitForm').on('submit', function(event) {
+                console.log('submit event triggered:', event);
+                $('#message').show();
+                $('#goButton').hide();
+            });
