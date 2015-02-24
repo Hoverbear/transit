@@ -105,7 +105,13 @@ Transit is successful in detecting code moves.
 
 Some of the detected moves where not simple refactoring but changes that would have changed the logic of the analyzed programs. It is worth noting that beyond our small test data, we did not check the percentage of moves that were not detected by `transit`.
 
-### Project Management - Milestones
+### Project Management
+
+Team Member | Github Account
+----------- | --------------
+Andrew Hobden | @hoverbear
+Brody Holden | @fraserd
+Fraser DeLisle | @BrodyHolden
 
 Date | Milestone | Complete
 ----------- | ------------- | -----
