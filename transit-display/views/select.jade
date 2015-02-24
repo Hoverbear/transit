@@ -6,13 +6,16 @@ block content
         Select a repository path.
     div.container(style="margin: 0;")
         div#repository
-            strong source repository:
+            h3 Choose a Repository:
             form#submitForm(action='/transit')
-                input#repositoryPath(name='repo')
-                input#repositoryPath(name='repopath')
-               
-                input(type='submit')
+                .form-group
+                    label Repo Title (Optional)
+                    input.form-control#repositoryPath(name='repo')
+                .form-group
+                    label Repository Path (As a file path, eg. `/home/f/git/foobar`)
+                    input.form-control#repositoryPath(name='repopath' required)
+               .form-group
+                    input.form-control(type='submit')
             p
-    p done
 script
     = $('#submitForm').on('submit', function(event) { console.log('submit button clicked.') })
