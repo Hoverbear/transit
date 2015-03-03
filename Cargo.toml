@@ -10,10 +10,11 @@ authors = [
 
 [dependencies]
 rustc-serialize = "*"
-docopt = "*"
+# docopt = "*"
 git2 = "*"
 regex = "*"
 regex_macros = "*"
 
-# [dependencies.git2]
-# git = "https://github.com/alexcrichton/git2-rs/"
+[dependencies.docopt]
+git = "https://github.com/hoverbear/docopt.rs"
+branch = "update"

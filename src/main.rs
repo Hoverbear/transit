@@ -1,5 +1,6 @@
 #![feature(core)]
 #![feature(path)]
+#![feature(collections)]
 
 #![feature(plugin)]
 #![plugin(regex_macros)]
@@ -9,17 +10,17 @@ extern crate core;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
 
-use git2::{Repository, Branch, BranchType, DiffLine,
+use git2::{Repository, DiffLine,
     Commit, Diff, DiffFormat, DiffDelta, DiffHunk, Oid};
 use docopt::Docopt;
-use std::old_io as io;
 use std::collections::HashMap;
-use std::old_io::BufferedReader;
-use std::old_io::File;
+// use std::old_io::BufferedReader;
+// use std::old_io::File;
 use std::str;
-use regex::Regex;
-use rustc_serialize::json::{self, ToJson, Json};
+// use regex::Regex;
+use rustc_serialize::json;
 use std::fmt::Display;
+use std::path::Path;
 
 // Write the Docopt usage string.
 static USAGE: &'static str = "
@@ -42,7 +43,7 @@ fn main() {
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
     // Pull up the revwalk.
-    let path = Path::new(args.arg_repo);
+    let path = Path::new(&args.arg_repo);
     let repo = Repository::discover(&path)
         .ok().expect("Unable to find repo.");
     // If we can destructures the two optional args into real things.
@@ -142,7 +143,7 @@ fn format_key(key: String) -> String {
 
 #[derive(Debug)]
 struct Found {
-    filename: Path,
+    filename: String,
     key: String,
     state: FoundState,
     start_position: u32,
@@ -161,8 +162,8 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
     let mut state = State::Other;
     let mut added = String::new();
     let mut deleted = String::new();
-    let mut old_path = Path::new("");
-    let mut new_path = Path::new("");
+    let mut old_path = String::new();
+    let mut new_path = String::new();
 
     let mut line_count: u32 = 0;
     let mut start_position: u32 = 0;
@@ -190,12 +191,14 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
         //dump_diffdelta(&delta);
         //dump_diffhunk(&maybe_hunk.unwrap());
 
-        old_path = match delta.old_file().path() {
-            Some(path) => path,
+        old_path = match delta.old_file().path()
+        .and_then(|x| x.to_str()) {
+            Some(path) => String::from_str(path),
             None => return false,
         };
-        new_path = match delta.new_file().path() {
-            Some(path) => path,
+        new_path = match delta.new_file().path()
+        .and_then(|x| x.to_str()) {
+            Some(path) => String::from_str(path),
             None => return false,
         };
 
@@ -309,7 +312,7 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
         State::Addition => {
             if added.len() > 0 {
                 founds.push(Found {
-                    filename: new_path,
+                    filename: new_path.clone(),
                     key: format_key(added.clone()),
                     state: FoundState::Added,
                     start_position: start_position,
@@ -320,7 +323,7 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
         State::Deletion => {
             if deleted.len() > 0 {
                 founds.push(Found {
-                    filename: old_path,
+                    filename: old_path.clone(),
                     key: format_key(deleted.clone()),
                     state: FoundState::Deleted,
                     start_position: start_position,
@@ -332,10 +335,6 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
     }
 
     return founds;
-}
-
-fn path_to_string(path: Path) -> String {
-    String::from_utf8(path.into_vec()).unwrap()
 }
 
 fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, git2::Error> {
@@ -357,7 +356,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
             // If both states are added, there are no moves.
             // assert!(f.state != q.state, format!("States {:?}, {:?}. Should be Addition/Deletion ", f.state, q.state));
-            if (f.state == q.state) {
+            if f.state == q.state {
                 return Ok(Vec::<Output>::new())
             }
 
@@ -368,8 +367,8 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                     output = Output {
                         old_commit: TransitOid(old.id()),
                         new_commit: TransitOid(new.id()),
-                        old_filename: path_to_string(q.filename.clone()),
-                        new_filename: path_to_string(f.filename.clone()),
+                        old_filename: q.filename.clone(),
+                        new_filename: f.filename.clone(),
                         origin_line: q.start_position,
                         destination_line: f.start_position,
                         num_lines: f.line_count,
@@ -379,8 +378,8 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                     output = Output {
                         old_commit: TransitOid(old.id()),
                         new_commit: TransitOid(new.id()),
-                        old_filename: path_to_string(f.filename.clone()),
-                        new_filename: path_to_string(q.filename.clone()),
+                        old_filename: f.filename.clone(),
+                        new_filename: q.filename.clone(),
                         origin_line: f.start_position,
                         destination_line: q.start_position,
                         num_lines: f.line_count,
