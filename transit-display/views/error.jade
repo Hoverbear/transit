@@ -2,6 +2,14 @@ extends layout
 
 block content
   h1 Error!
-  h2 Code #{message.code}
+  h2 Code #{code}
   br
-  pre #{message.msg}
+  - if( message.msg)
+    h2 message
+    pre #{message.msg}
+  - if (error)
+    h2 error
+    pre #{error}
+  - if (stacktrace)
+    h2 stacktrace
+    pre #{stacktrace}

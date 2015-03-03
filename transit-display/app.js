@@ -43,10 +43,13 @@ app.use(function(req, res, next) {
 // will print stacktrace
 if (app.get('env') === 'development') {
     app.use(function(err, req, res, next) {
+        console.log('ERROR handler', err);
         res.status(err.status || 500);
         res.render('error', {
+            code: err.status || 500,
             message: err.message,
-            error: err
+            error: err,
+            stacktrace: err.stack
         });
     });
 }
@@ -56,8 +59,9 @@ if (app.get('env') === 'development') {
 app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.render('error', {
+        code: res.status || 500,
         message: err.message,
-        error: {}
+        error: ''
     });
 });
 
