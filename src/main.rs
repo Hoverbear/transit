@@ -54,7 +54,7 @@ fn main() {
         let new = Oid::from_str(&new_string[..]).and_then(|oid| repo.find_commit(oid));
         if old.is_ok() && new.is_ok() {
             let output = find_moves(&repo, &old.unwrap(), &new.unwrap()).unwrap();
-            make_output(output);
+            make_output(vec![output]);
         } else {
             panic!("Commit ids were not valid.");
         }
@@ -76,12 +76,10 @@ fn main() {
             .collect::<Vec<Commit>>();
         let mut output = vec![];
         // Walk through each pair of commits.
-        for pair in history.windows(2) {let (old, new) = (&pair[1], &pair[0]);
+        for pair in history.windows(2) {
+            let (old, new) = (&pair[1], &pair[0]);
             let detected = find_moves(&repo, old.clone(), new.clone()).unwrap();
-            for item in detected {
-                if item.num_lines == 0 { continue };
-                output.push(item);
-            }
+            output.push(detected);
         }
         if args.flag_json {
             make_json(output);
@@ -91,20 +89,22 @@ fn main() {
     }
 }
 
-fn make_output(output: Vec<Output>) {
+fn make_output(output: Vec<Vec<Output>>) {
     println!("make_output: output.len()={}", output.len());
-    for i in range(0, output.len()) {
-            println!("\told_commit={}",         output[i].old_commit);
-            println!("\tnew_commit={}",         output[i].new_commit);
-            println!("\torigin_line={}",        output[i].origin_line);
-            println!("\tdestintation_line={}",  output[i].destination_line);
-            println!("\tnum_lines={}",          output[i].num_lines);
-            println!("\tnew_filename={}",       output[i].new_filename);
-            println!("\told_filename={}",       output[i].old_filename);
+    for o in output {
+        for i in o {
+                println!("\told_commit={}",         i.old_commit);
+                println!("\tnew_commit={}",         i.new_commit);
+                println!("\torigin_line={}",        i.origin_line);
+                println!("\tdestintation_line={}",  i.destination_line);
+                println!("\tnum_lines={}",          i.num_lines);
+                println!("\tnew_filename={}",       i.new_filename);
+                println!("\told_filename={}",       i.old_filename);
+        }
     }
 }
 
-fn make_json(output: Vec<Output>) {
+fn make_json(output: Vec<Vec<Output>>) {
     println!("{}", json::encode(&output).unwrap());
 }
 

@@ -8,6 +8,7 @@ block content
             strong source repository: 
             = repository
             p
+        #chart
         table.table.table-bordered.table-striped
             thead
                 tr
@@ -22,14 +23,32 @@ block content
                     th number of lines
             tbody
                 - for (var x = 0; x < diffs.length; x++)
-                    tr
-                        td= x
-                        td= diffs[x].old_commit
-                        td= diffs[x].new_commit
-                        td= diffs[x].old_filename
-                        td= diffs[x].new_filename
-                        td= diffs[x].origin_line
-                        td= diffs[x].destination_line
-                        td= diffs[x].num_lines
+                    for move in diffs[x]
+                        tr
+                            td= x
+                            td= move.old_commit
+                            td= move.new_commit
+                            td= move.old_filename
+                            td= move.new_filename
+                            td= move.origin_line
+                            td= move.destination_line
+                            td= move.num_lines
 
-    p done
+        script.
+            var data = !{JSON.stringify(diffs)}
+            var mapped = data.map(function (set) { 
+                return set.reduce(function (sum, val) {
+                    return sum + val.num_lines;
+                }, 0)
+            });
+            console.log(mapped);
+            var chart = c3.generate({
+                bindto: '#chart',
+                data: {
+                    json: {
+                        numlines: mapped
+                    },
+                    type: "bar"
+                }
+            });
+    

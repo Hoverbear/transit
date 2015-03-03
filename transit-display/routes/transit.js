@@ -11,7 +11,7 @@ function executeTransit(repo, from, to) {
         args[1] = from;
         args[2] = to;
     }
-    
+
     var transitOutput = "";
     var transitErr    = "";
 
@@ -30,10 +30,12 @@ function executeTransit(repo, from, to) {
             console.log('child process exited with code ' + code);
             if (code === 0) {
                 console.log("transit ok");
-    
+
                 console.log("transit:", transitOutput);
-                deferred.resolve(JSON.parse(transitOutput));
-    
+                var parsed = JSON.parse(transitOutput);
+                console.log("PARSED")
+                deferred.resolve(parsed);
+
             } else {
                 console.log("ERROR: transit execution failed!");
                 deferred.reject({msg: transitErr, code: code})
@@ -114,6 +116,7 @@ router.get('/', function (req, res, next) {
     }
 
     function renderOutput(output) {
+        console.log("DONE EXECUTING AND IS FINE");
         res.render('transit', output);
     }
 });
