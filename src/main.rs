@@ -51,15 +51,27 @@ fn main() {
     // If we can destructures the two optional args into real things.
     if let (Some(old_string), Some(new_string)) = (args.arg_old, args.arg_new) {
         // Compare a specific commit pair.
-        // Fist, get the commits. (Error checked)
-        let old = Oid::from_str(&old_string[..]).and_then(|oid| repo.find_commit(oid));
-        let new = Oid::from_str(&new_string[..]).and_then(|oid| repo.find_commit(oid));
-        if old.is_ok() && new.is_ok() {
-            let output = find_moves(&repo, &old.unwrap(), &new.unwrap()).unwrap();
-            make_output(vec![output]);
-        } else {
-            panic!("Commit ids were not valid.");
-        }
+        // Fail fast here since it's only one commit pair.
+        let old = Oid::from_str(&old_string[..])
+            .ok().expect("Commit old commit id was not valid.");
+        let new = Oid::from_str(&new_string[..])
+            .ok().expect("Commit new commit id was not valid.");
+        let old_commit = repo.find_commit(old)
+            .ok().expect("Could not retrieve commit");
+        let new_commit = repo.find_commit(new)
+            .ok().expect("Could not retrieve commit");
+        let old_tree = old_commit.tree()
+            .ok().expect("Could not get old tree");
+        let new_tree = new_commit.tree()
+            .ok().expect("Could not get new tree");
+        // Build up a diff of the two trees.
+        let diff = Diff::tree_to_tree(&repo, Some(&old_tree), Some(&new_tree), None)
+            .ok().expect("Could not get diff.");
+        let founds: Vec<Found> = find_additions_and_deletions(diff);
+        let detected = find_moves(founds).unwrap();
+        let mut output = HashMap::new();
+        output.insert((TransitOid(old), TransitOid(new)), detected);
+        make_output(output);
     } else {
         // Revwalk.
         let mut revwalk = repo.revwalk()
@@ -74,18 +86,26 @@ fn main() {
         revwalk.push_head()
             .ok().expect("Unable to push HEAD.");
         // We sadly must collect here to use `.windows()`
-        let history = revwalk.filter_map(|id| repo.find_commit(id).ok())
-            .collect::<Vec<Commit>>();
+        let history = revwalk.collect::<Vec<Oid>>();
         let pairs = history.windows(2);
-        let mut output = Vec::with_capacity(pairs.len());
+        let mut output = HashMap::<(TransitOid, TransitOid), Vec<Output>>::with_capacity(pairs.len());
         { // Thread scope.
             let pool = ScopedPool::new(4);
             // Walk through each pair of commits.
             for (idx, pair) in pairs.enumerate() {
-                let (old, new) = (&pair[1], &pair[0]);;
-                pool.execute(move|| {
-                    let detected = find_moves(&repo, old.clone(), new.clone()).unwrap();
-                    output.push(detected);
+
+                let (old, new) = (pair[1], pair[0]);
+                let old_tree = repo.find_commit(old).and_then(|x| x.tree())
+                    .ok().expect("Couldn't retrieve a tree");
+                let new_tree = repo.find_commit(new).and_then(|x| x.tree())
+                    .ok().expect("Couldn't retrieve a tree");
+                // Build up a diff of the two trees.
+                let diff = Diff::tree_to_tree(&repo, Some(&old_tree), Some(&new_tree), None)
+                    .ok().expect("Couldn't build a diff");
+                let founds: Vec<Found> = find_additions_and_deletions(diff);
+                pool.execute(|| {
+                    let detected = find_moves(founds).unwrap();
+                    output.insert((TransitOid(old), TransitOid(new)), detected);
                 });
             }
         }
@@ -97,49 +117,29 @@ fn main() {
     }
 }
 
-fn make_output(output: Vec<Vec<Output>>) {
+fn make_output(output: HashMap<(TransitOid, TransitOid), Vec<Output>>) {
     println!("make_output: output.len()={}", output.len());
-    for o in output {
-        for i in o {
-                println!("\told_commit={}",         i.old_commit);
-                println!("\tnew_commit={}",         i.new_commit);
-                println!("\torigin_line={}",        i.origin_line);
-                println!("\tdestintation_line={}",  i.destination_line);
-                println!("\tnum_lines={}",          i.num_lines);
-                println!("\tnew_filename={}",       i.new_filename);
-                println!("\told_filename={}",       i.old_filename);
+    for (&(old, new), val) in output.iter() {
+        println!("old_commit={}",         old);
+        println!("new_commit={}",         new);
+        for found in val.iter() {
+                println!("\torigin_line={}",        found.origin_line);
+                println!("\tdestintation_line={}",  found.destination_line);
+                println!("\tnum_lines={}",          found.num_lines);
+                println!("\tnew_filename={}",       found.new_filename);
+                println!("\told_filename={}",       found.old_filename);
         }
+        println!("---")
     }
 }
 
-fn make_json(output: Vec<Vec<Output>>) {
+fn make_json(output: HashMap<(TransitOid, TransitOid), Vec<Output>>) {
     println!("{}", json::encode(&output).unwrap());
 }
 
 #[derive(Debug, PartialEq, Eq)]
 enum FoundState {
     Added, Deleted
-}
-
-fn dump_diffline(line: &DiffLine) {
-    // 'origin' is wrapped in pipes to ease displaying space characters.
-    print!("line: old={:?} new={:?} offset={} |origin|=|{}|\n      content={}",
-             line.old_lineno(), line.new_lineno(), line.content_offset(),
-             line.origin(), str::from_utf8(line.content()).unwrap());
-}
-
-fn dump_diffdelta(delta: &DiffDelta) {
-    println!("delta: nfiles={} status={:?} old_file=(id={} path_bytes={:?} path={:?} tsize={}) new_file=(id={} path_bytes={:?} path={:?} tsize={})",
-            delta.nfiles(), delta.status(),
-            delta.old_file().id(), delta.old_file().path_bytes(), delta.old_file().path(), delta.old_file().size(),
-            delta.new_file().id(), delta.new_file().path_bytes(), delta.new_file().path(), delta.new_file().size());
-}
-
-fn dump_diffhunk(hunk: &DiffHunk) {
-    println!("hunk: old_start={} old_lines={} new_start={} new_lines={} header={}",
-            hunk.old_start(), hunk.old_lines(),
-            hunk.new_start(), hunk.new_lines(),
-            str::from_utf8(hunk.header()).unwrap());
 }
 
 fn format_key(key: String) -> String {
@@ -345,14 +345,7 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
     return founds;
 }
 
-fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, git2::Error> {
-    let old_tree = try!(old.tree());
-    let new_tree = try!(new.tree());
-    // Build up a diff of the two trees.
-    let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
-
-    let founds: Vec<Found> = find_additions_and_deletions(diff);
-
+fn find_moves(founds: Vec<Found>) -> Result<Vec<Output>, git2::Error> {
     let mut moves: Vec<Output> = Vec::new();
     let mut map: HashMap<String, Found> = HashMap::new();
 
@@ -373,8 +366,6 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
             match f.state {
                 FoundState::Added => {
                     output = Output {
-                        old_commit: TransitOid(old.id()),
-                        new_commit: TransitOid(new.id()),
                         old_filename: q.filename.clone(),
                         new_filename: f.filename.clone(),
                         origin_line: q.start_position,
@@ -384,8 +375,6 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                 },
                 FoundState::Deleted => {
                     output = Output {
-                        old_commit: TransitOid(old.id()),
-                        new_commit: TransitOid(new.id()),
                         old_filename: f.filename.clone(),
                         new_filename: q.filename.clone(),
                         origin_line: f.start_position,
@@ -407,8 +396,6 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
 #[derive(Debug, RustcEncodable)]
 struct Output {
-    old_commit: TransitOid,
-    new_commit: TransitOid,
     old_filename: String,
     new_filename: String,
     origin_line: u32,
@@ -416,7 +403,7 @@ struct Output {
     num_lines: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 struct TransitOid(Oid);
 impl Display for TransitOid {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
