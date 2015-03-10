@@ -9,6 +9,7 @@ extern crate git2;
 extern crate core;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
+extern crate threadpool;
 
 use git2::{Repository, DiffLine,
     Commit, Diff, DiffFormat, DiffDelta, DiffHunk, Oid};
@@ -21,6 +22,7 @@ use std::str;
 use rustc_serialize::json;
 use std::fmt::Display;
 use std::path::Path;
+use threadpool::ScopedPool;
 
 // Write the Docopt usage string.
 static USAGE: &'static str = "
@@ -74,12 +76,18 @@ fn main() {
         // We sadly must collect here to use `.windows()`
         let history = revwalk.filter_map(|id| repo.find_commit(id).ok())
             .collect::<Vec<Commit>>();
-        let mut output = vec![];
-        // Walk through each pair of commits.
-        for pair in history.windows(2) {
-            let (old, new) = (&pair[1], &pair[0]);
-            let detected = find_moves(&repo, old.clone(), new.clone()).unwrap();
-            output.push(detected);
+        let pairs = history.windows(2);
+        let mut output = Vec::with_capacity(pairs.len());
+        { // Thread scope.
+            let pool = ScopedPool::new(4);
+            // Walk through each pair of commits.
+            for (idx, pair) in pairs.enumerate() {
+                let (old, new) = (&pair[1], &pair[0]);;
+                pool.execute(move|| {
+                    let detected = find_moves(&repo, old.clone(), new.clone()).unwrap();
+                    output.push(detected);
+                });
+            }
         }
         if args.flag_json {
             make_json(output);
