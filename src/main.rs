@@ -48,11 +48,19 @@ fn main() {
     if let (Some(old_string), Some(new_string)) = (args.arg_old, args.arg_new) {
         // Compare a specific commit pair.
         // Fist, get the commits. (Error checked)
-        let old = Oid::from_str(&old_string[..]).and_then(|oid| repo.find_commit(oid));
-        let new = Oid::from_str(&new_string[..]).and_then(|oid| repo.find_commit(oid));
+        let old_id = Oid::from_str(&old_string[..])
+            .ok().expect("Couldn't parse old ID");
+        let old = repo.find_commit(old_id);
+        let new_id = Oid::from_str(&new_string[..])
+            .ok().expect("Couldn't parse new ID");
+        let new = repo.find_commit(new_id);
         if old.is_ok() && new.is_ok() {
             let output = find_moves(&repo, &old.unwrap(), &new.unwrap()).unwrap();
-            make_json(vec![output]);
+            make_json(vec![OutputSet {
+                old: TransitOid(old_id),
+                new: TransitOid(new_id),
+                outputs: output,
+            }]);
         } else {
             panic!("Commit ids were not valid.");
         }
@@ -70,20 +78,27 @@ fn main() {
         revwalk.push_head()
             .ok().expect("Unable to push HEAD.");
         // We sadly must collect here to use `.windows()`
-        let history = revwalk.filter_map(|id| repo.find_commit(id).ok())
-            .collect::<Vec<Commit>>();
-        let mut output = vec![];
+        let history = revwalk.collect::<Vec<Oid>>();
+        let mut output = Vec::with_capacity(history.len());
         // Walk through each pair of commits.
         for pair in history.windows(2) {
-            let (old, new) = (&pair[1], &pair[0]);
-            let detected = find_moves(&repo, old.clone(), new.clone()).unwrap();
-            output.push(detected);
+            let (old_id, new_id) = (pair[0], pair[1]);
+            if let (Ok(old), Ok(new)) = (repo.find_commit(old_id), repo.find_commit(new_id)) {
+                let detected = find_moves(&repo, &old, &new).unwrap();
+                output.push(OutputSet {
+                    old: TransitOid(old_id),
+                    new: TransitOid(new_id),
+                    outputs: detected,
+                });
+            } else {
+                continue;
+            }
         }
         make_json(output);
     }
 }
 
-fn make_json(output: Vec<Vec<Output>>) {
+fn make_json(output: Vec<OutputSet>) {
     let out = json::as_pretty_json(&output).indent(4);
     println!("{}", out);
 }
@@ -324,8 +339,6 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
             match f.state {
                 FoundState::Added => {
                     output = Output {
-                        old_commit: TransitOid(old.id()),
-                        new_commit: TransitOid(new.id()),
                         old_filename: q.filename.clone(),
                         new_filename: f.filename.clone(),
                         origin_line: q.start_position,
@@ -335,8 +348,6 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
                 },
                 FoundState::Deleted => {
                     output = Output {
-                        old_commit: TransitOid(old.id()),
-                        new_commit: TransitOid(new.id()),
                         old_filename: f.filename.clone(),
                         new_filename: q.filename.clone(),
                         origin_line: f.start_position,
@@ -355,11 +366,15 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
     return Ok(moves);
 }
 
+#[derive(Debug, RustcEncodable)]
+struct OutputSet {
+    old: TransitOid,
+    new: TransitOid,
+    outputs: Vec<Output>,
+}
 
 #[derive(Debug, RustcEncodable)]
 struct Output {
-    old_commit: TransitOid,
-    new_commit: TransitOid,
     old_filename: String,
     new_filename: String,
     origin_line: u32,
@@ -367,7 +382,7 @@ struct Output {
     num_lines: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Hash, PartialEq, Eq)]
 struct TransitOid(Oid);
 impl Display for TransitOid {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
