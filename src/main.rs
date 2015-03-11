@@ -25,7 +25,7 @@ use std::path::Path;
 static USAGE: &'static str = "
 Usage: transit <repo> [<old> <new>]
 
-If no commits are given, transit will revwalk from latest to oldest. Output is in compact JSON.
+If no commits are given, transit will revwalk from latest to oldest. Output is in JSON.
 ";
 
 #[derive(RustcDecodable, Debug)]

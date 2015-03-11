@@ -36,13 +36,11 @@ cd transit && \
 cargo build
 ```
 
-Now you can run the binary on any repository, even itself!
+Now you can run the binary on any repository, even itself! It will output JSON.
 
 ```bash
 ./target/transit .
 ```
-
-For JSON output, use `--json`
 
 #### Installing `transit-display`
 
