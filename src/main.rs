@@ -10,8 +10,7 @@ extern crate core;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate docopt;
 
-use git2::{Repository, DiffLine,
-    Commit, Diff, DiffFormat, DiffDelta, DiffHunk, Oid};
+use git2::{Repository, Commit, Diff, DiffFormat, Oid};
 use docopt::Docopt;
 use std::collections::HashMap;
 // use std::old_io::BufferedReader;
@@ -24,9 +23,9 @@ use std::path::Path;
 
 // Write the Docopt usage string.
 static USAGE: &'static str = "
-Usage: transit <repo> [--json] [<old> <new>]
+Usage: transit <repo> [<old> <new>]
 
-If no commits are given, transit will revwalk from latest to oldest.
+If no commits are given, transit will revwalk from latest to oldest. Output is in compact JSON.
 ";
 
 #[derive(RustcDecodable, Debug)]
@@ -34,7 +33,6 @@ struct Args {
     arg_repo: String,
     arg_old: Option<String>,
     arg_new: Option<String>,
-    flag_json: bool,
 }
 
 fn main() {
@@ -54,7 +52,7 @@ fn main() {
         let new = Oid::from_str(&new_string[..]).and_then(|oid| repo.find_commit(oid));
         if old.is_ok() && new.is_ok() {
             let output = find_moves(&repo, &old.unwrap(), &new.unwrap()).unwrap();
-            make_output(vec![output]);
+            make_json(vec![output]);
         } else {
             panic!("Commit ids were not valid.");
         }
@@ -81,31 +79,13 @@ fn main() {
             let detected = find_moves(&repo, old.clone(), new.clone()).unwrap();
             output.push(detected);
         }
-        if args.flag_json {
-            make_json(output);
-        } else {
-            make_output(output);
-        }
-    }
-}
-
-fn make_output(output: Vec<Vec<Output>>) {
-    println!("make_output: output.len()={}", output.len());
-    for o in output {
-        for i in o {
-                println!("\told_commit={}",         i.old_commit);
-                println!("\tnew_commit={}",         i.new_commit);
-                println!("\torigin_line={}",        i.origin_line);
-                println!("\tdestintation_line={}",  i.destination_line);
-                println!("\tnum_lines={}",          i.num_lines);
-                println!("\tnew_filename={}",       i.new_filename);
-                println!("\told_filename={}",       i.old_filename);
-        }
+        make_json(output);
     }
 }
 
 fn make_json(output: Vec<Vec<Output>>) {
-    println!("{}", json::encode(&output).unwrap());
+    let out = json::as_pretty_json(&output).indent(4);
+    println!("{}", out);
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -284,7 +264,7 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
                 true
             }
         }
-    });
+    }).ok(); // We don't care if we exit early. That's fine.
 
     // Grab last one.
     match state {
