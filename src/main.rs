@@ -25,7 +25,7 @@ use std::path::Path;
 static USAGE: &'static str = "
 Usage: transit <repo> [<old> <new>]
 
-If no commits are given, transit will revwalk from latest to oldest. Output is in JSON.
+If no commits are given, transit will revwalk from latest to oldest. Output is ing JSON.
 ";
 
 #[derive(RustcDecodable, Debug)]
@@ -179,8 +179,10 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
         match line.origin() {
             // Additions
             '+' | '>' => {
-                added.push_str(str::from_utf8(line.content())
-                    .ok().expect("Couldn't parse line content for added"));
+                // If we attempt to unwrap and get `InvalidBytes(_)` it's probably just junk.
+                // TODO: Is it?
+                let line_str = str::from_utf8(line.content()).unwrap_or("");
+                added.push_str(line_str);
 
                 match state {
                     State::Deletion => {
@@ -215,8 +217,10 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
             },
             // Deletions
             '-' | '<' => {
-                deleted.push_str(str::from_utf8(line.content())
-                    .ok().expect("Couldn't parse line content for deleted"));
+                // If we attempt to unwrap and get `InvalidBytes(_)` it's probably just junk.
+                // TODO: Is it?
+                let line_str = str::from_utf8(line.content()).unwrap_or("");
+                deleted.push_str(line_str);
 
                 match state {
                     State::Addition => {
