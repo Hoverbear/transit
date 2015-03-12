@@ -55,10 +55,13 @@ fn main() {
             .ok().expect("Couldn't parse new ID");
         let new = repo.find_commit(new_id);
         if old.is_ok() && new.is_ok() {
-            let output = find_moves(&repo, &old.unwrap(), &new.unwrap()).unwrap();
+            let (old_commit, new_commit) = (old.unwrap(), new.unwrap());
+            let output = find_moves(&repo, &old_commit, &new_commit).unwrap();
             make_json(vec![OutputSet {
                 old: TransitOid(old_id),
+                old_time: old_commit.time().seconds(), // Seconds from Epoch
                 new: TransitOid(new_id),
+                new_time: new_commit.time().seconds(), // Seconds from Epoch
                 outputs: output,
             }]);
         } else {
@@ -87,7 +90,9 @@ fn main() {
                 let detected = find_moves(&repo, &old, &new).unwrap();
                 output.push(OutputSet {
                     old: TransitOid(old_id),
+                    old_time: old.time().seconds(), // Seconds from Epoch
                     new: TransitOid(new_id),
+                    new_time: new.time().seconds(), // Seconds from Epoch
                     outputs: detected,
                 });
             } else {
@@ -373,7 +378,9 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 #[derive(Debug, RustcEncodable)]
 struct OutputSet {
     old: TransitOid,
+    old_time: i64, // Seconds from Epoch
     new: TransitOid,
+    new_time: i64, // Seconds from Epoch
     outputs: Vec<Output>,
 }
 
