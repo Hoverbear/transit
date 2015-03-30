@@ -7,7 +7,7 @@
 extern crate regex;
 extern crate git2;
 extern crate core;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
 extern crate docopt;
 
 use git2::{Repository, Commit, Diff, DiffFormat, Oid};
