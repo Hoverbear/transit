@@ -39,7 +39,7 @@ cargo build
 Now you can run the binary on any repository, even itself! It will output JSON.
 
 ```bash
-./target/transit .
+./target/debug/transit .
 ```
 
 #### Installing `transit-display`

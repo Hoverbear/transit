@@ -1,5 +1,4 @@
 #![feature(core)]
-#![feature(path)]
 #![feature(collections)]
 
 #![feature(plugin)]
@@ -116,8 +115,8 @@ enum FoundState {
 fn format_key(key: String) -> String {
     let remove_whitespace = regex!(r"\s{2,}"); // 2 or more whitespaces    // TODO Removes whitespace from a string.
     let trim = regex!(r"^[\s]+|[\s]+$");
-    let result = remove_whitespace.replace_all(key.as_slice(), "");
-    trim.replace_all(result.as_slice(), "")
+    let result = remove_whitespace.replace_all(&key[..], "");
+    trim.replace_all(&result[..], "")
 }
 
 #[derive(Debug)]
