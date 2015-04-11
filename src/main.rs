@@ -2,8 +2,7 @@
 #![feature(collections)]
 
 #![feature(plugin)]
-#![plugin(regex_macros)]
-extern crate regex;
+#![plugin(regex_macros)] extern crate regex;
 extern crate git2;
 extern crate core;
 extern crate rustc_serialize;
@@ -22,14 +21,22 @@ use std::path::Path;
 
 // Write the Docopt usage string.
 static USAGE: &'static str = "
-Usage: transit <repo> [<old> <new>]
+Usage: transit [--web | <repo> [<old> <new>] | --help]
 
-If no commits are given, transit will revwalk from latest to oldest. Output is ing JSON.
+Examples:
+  transit --web             Spawn a web service.
+  transit $REPO             Output the results of a revwalk through a repo.
+  transit $REPO $ID1 $ID2   Output the data for a pair of commits.
+  transit --help            Display this message.
+
+
+Output is in JSON.
 ";
 
 #[derive(RustcDecodable, Debug)]
 struct Args {
-    arg_repo: String,
+    flag_web: bool,
+    arg_repo: Option<String>,
     arg_old: Option<String>,
     arg_new: Option<String>,
 }
@@ -39,66 +46,75 @@ fn main() {
     let args: Args = Docopt::new(USAGE)
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
-    // Pull up the revwalk.
-    let path = Path::new(&args.arg_repo);
-    let repo = Repository::discover(&path)
-        .ok().expect("Unable to find repo.");
-    // If we can destructures the two optional args into real things.
-    if let (Some(old_string), Some(new_string)) = (args.arg_old, args.arg_new) {
-        // Compare a specific commit pair.
-        // Fist, get the commits. (Error checked)
-        let old_id = Oid::from_str(&old_string[..])
-            .ok().expect("Couldn't parse old ID");
-        let old = repo.find_commit(old_id);
-        let new_id = Oid::from_str(&new_string[..])
-            .ok().expect("Couldn't parse new ID");
-        let new = repo.find_commit(new_id);
-        if old.is_ok() && new.is_ok() {
-            let (old_commit, new_commit) = (old.unwrap(), new.unwrap());
-            let output = find_moves(&repo, &old_commit, &new_commit).unwrap();
-            make_json(vec![OutputSet {
-                old: TransitOid(old_id),
-                old_time: old_commit.time().seconds(), // Seconds from Epoch
-                new: TransitOid(new_id),
-                new_time: new_commit.time().seconds(), // Seconds from Epoch
-                outputs: output,
-            }]);
+
+    print!("{:?}", args);
+
+    if args.flag_web {
+        unimplemented!();
+    } else if let Some(path_string) = args.arg_repo {
+        // Pull up the revwalk.
+        let path = Path::new(&path_string);
+        let repo = Repository::discover(&path)
+            .ok().expect("Unable to find repo.");
+        // If we can destructures the two optional args into real things.
+        if let (Some(old_string), Some(new_string)) = (args.arg_old, args.arg_new) {
+            // Compare a specific commit pair.
+            // Fist, get the commits. (Error checked)
+            let old_id = Oid::from_str(&old_string[..])
+                .ok().expect("Couldn't parse old ID");
+            let old = repo.find_commit(old_id);
+            let new_id = Oid::from_str(&new_string[..])
+                .ok().expect("Couldn't parse new ID");
+            let new = repo.find_commit(new_id);
+            if old.is_ok() && new.is_ok() {
+                let (old_commit, new_commit) = (old.unwrap(), new.unwrap());
+                let output = find_moves(&repo, &old_commit, &new_commit).unwrap();
+                make_json(vec![OutputSet {
+                    old: TransitOid(old_id),
+                    old_time: old_commit.time().seconds(), // Seconds from Epoch
+                    new: TransitOid(new_id),
+                    new_time: new_commit.time().seconds(), // Seconds from Epoch
+                    outputs: output,
+                }]);
+            } else {
+                panic!("Commit ids were not valid.");
+            }
         } else {
-            panic!("Commit ids were not valid.");
+            // Revwalk.
+            let mut revwalk = repo.revwalk()
+                .ok().expect("Unable to get revwalk.");
+            // Setup some options.
+            revwalk.simplify_first_parent(); // TODO: Maybe remove?
+            let mut flags = git2::Sort::empty();
+            flags.insert(git2::SORT_TIME);
+            flags.insert(git2::SORT_TOPOLOGICAL);
+            revwalk.set_sorting(flags);
+            // Push HEAD to the revwalk.
+            revwalk.push_head()
+                .ok().expect("Unable to push HEAD.");
+            // We sadly must collect here to use `.windows()`
+            let history = revwalk.collect::<Vec<Oid>>();
+            let mut output = Vec::with_capacity(history.len());
+            // Walk through each pair of commits.
+            for pair in history.windows(2) {
+                let (old_id, new_id) = (pair[0], pair[1]);
+                if let (Ok(old), Ok(new)) = (repo.find_commit(old_id), repo.find_commit(new_id)) {
+                    let detected = find_moves(&repo, &old, &new).unwrap();
+                    output.push(OutputSet {
+                        old: TransitOid(old_id),
+                        old_time: old.time().seconds(), // Seconds from Epoch
+                        new: TransitOid(new_id),
+                        new_time: new.time().seconds(), // Seconds from Epoch
+                        outputs: detected,
+                    });
+                } else {
+                    continue;
+                }
+            }
+            make_json(output);
         }
     } else {
-        // Revwalk.
-        let mut revwalk = repo.revwalk()
-            .ok().expect("Unable to get revwalk.");
-        // Setup some options.
-        revwalk.simplify_first_parent(); // TODO: Maybe remove?
-        let mut flags = git2::Sort::empty();
-        flags.insert(git2::SORT_TIME);
-        flags.insert(git2::SORT_TOPOLOGICAL);
-        revwalk.set_sorting(flags);
-        // Push HEAD to the revwalk.
-        revwalk.push_head()
-            .ok().expect("Unable to push HEAD.");
-        // We sadly must collect here to use `.windows()`
-        let history = revwalk.collect::<Vec<Oid>>();
-        let mut output = Vec::with_capacity(history.len());
-        // Walk through each pair of commits.
-        for pair in history.windows(2) {
-            let (old_id, new_id) = (pair[0], pair[1]);
-            if let (Ok(old), Ok(new)) = (repo.find_commit(old_id), repo.find_commit(new_id)) {
-                let detected = find_moves(&repo, &old, &new).unwrap();
-                output.push(OutputSet {
-                    old: TransitOid(old_id),
-                    old_time: old.time().seconds(), // Seconds from Epoch
-                    new: TransitOid(new_id),
-                    new_time: new.time().seconds(), // Seconds from Epoch
-                    outputs: detected,
-                });
-            } else {
-                continue;
-            }
-        }
-        make_json(output);
+        unreachable!();
     }
 }
 
