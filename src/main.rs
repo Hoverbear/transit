@@ -144,12 +144,12 @@ struct Found {
     line_count: u32,
 }
 
-fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
+#[derive(Debug)]
+enum State {
+    Other, Addition, Deletion
+}
 
-    #[derive(Debug)]
-    enum State {
-        Other, Addition, Deletion
-    }
+fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
 
     let mut founds: Vec<Found> = Vec::new();
 
