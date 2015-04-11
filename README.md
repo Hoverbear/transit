@@ -25,7 +25,9 @@ Since we built a tool, we did not perform significant gathering of outside metri
 You will need the [Rust](http://rust-lang.org/) compiler:
 
 ```bash
-curl -L https://static.rust-lang.org/rustup.sh | sudo sh
+curl -L https://static.rust-lang.org/rustup.sh | rustup
+chmod +x rustup
+sudo rustup --channel=nightly
 ```
 
 This should install `cargo` and `rustc`. Clone the repository and build it:

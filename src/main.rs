@@ -8,7 +8,7 @@ extern crate core;
 extern crate rustc_serialize;
 extern crate docopt;
 
-use git2::{Repository, Commit, Diff, DiffFormat, Oid};
+use git2::{Repository, Commit, Diff, DiffFormat, Oid, Error};
 use docopt::Docopt;
 use std::collections::HashMap;
 // use std::old_io::BufferedReader;
@@ -52,80 +52,82 @@ fn main() {
     if args.flag_web {
         unimplemented!();
     } else if let Some(path_string) = args.arg_repo {
-        // Pull up the revwalk.
+        // Validate values.
         let path = Path::new(&path_string);
         let repo = Repository::discover(&path)
             .ok().expect("Unable to find repo.");
-        // If we can destructures the two optional args into real things.
-        if let (Some(old_string), Some(new_string)) = (args.arg_old, args.arg_new) {
-            // Compare a specific commit pair.
-            // Fist, get the commits. (Error checked)
-            let old_id = Oid::from_str(&old_string[..])
-                .ok().expect("Couldn't parse old ID");
-            let old = repo.find_commit(old_id);
-            let new_id = Oid::from_str(&new_string[..])
-                .ok().expect("Couldn't parse new ID");
-            let new = repo.find_commit(new_id);
-            if old.is_ok() && new.is_ok() {
-                let (old_commit, new_commit) = (old.unwrap(), new.unwrap());
-                let output = find_moves(&repo, &old_commit, &new_commit).unwrap();
-                make_json(vec![OutputSet {
-                    old: TransitOid(old_id),
-                    old_time: old_commit.time().seconds(), // Seconds from Epoch
-                    new: TransitOid(new_id),
-                    new_time: new_commit.time().seconds(), // Seconds from Epoch
-                    outputs: output,
-                }]);
-            } else {
-                panic!("Commit ids were not valid.");
-            }
+        let old = args.arg_old
+            .and_then(|string| Oid::from_str(&string[..]).ok());
+        let new = args.arg_new
+            .and_then(|string| Oid::from_str(&string[..]).ok());
+        // Dispatch.
+        let output = if let (Some(old_id), Some(new_id)) = (old, new) {
+            process_commits(repo, old_id, new_id).unwrap();
         } else {
-            // Revwalk.
-            let mut revwalk = repo.revwalk()
-                .ok().expect("Unable to get revwalk.");
-            // Setup some options.
-            revwalk.simplify_first_parent(); // TODO: Maybe remove?
-            let mut flags = git2::Sort::empty();
-            flags.insert(git2::SORT_TIME);
-            flags.insert(git2::SORT_TOPOLOGICAL);
-            revwalk.set_sorting(flags);
-            // Push HEAD to the revwalk.
-            revwalk.push_head()
-                .ok().expect("Unable to push HEAD.");
-            // We sadly must collect here to use `.windows()`
-            let history = revwalk.collect::<Vec<Oid>>();
-            let mut output = Vec::with_capacity(history.len());
-            // Walk through each pair of commits.
-            for pair in history.windows(2) {
-                let (old_id, new_id) = (pair[0], pair[1]);
-                if let (Ok(old), Ok(new)) = (repo.find_commit(old_id), repo.find_commit(new_id)) {
-                    let detected = find_moves(&repo, &old, &new).unwrap();
-                    output.push(OutputSet {
-                        old: TransitOid(old_id),
-                        old_time: old.time().seconds(), // Seconds from Epoch
-                        new: TransitOid(new_id),
-                        new_time: new.time().seconds(), // Seconds from Epoch
-                        outputs: detected,
-                    });
-                } else {
-                    continue;
-                }
-            }
-            make_json(output);
-        }
+            process_repo(repo).unwrap();
+        };
+        println!("{}", json::as_pretty_json(&output).indent(4));
     } else {
         unreachable!();
     }
 }
 
-fn make_json(output: Vec<OutputSet>) {
-    let out = json::as_pretty_json(&output).indent(4);
-    println!("{}", out);
-}
-
 #[derive(Debug, PartialEq, Eq)]
 enum FoundState {
     Added, Deleted
+}
+
+fn process_commits(repo: Repository, old_id: Oid, new_id: Oid) -> Result<OutputSet, git2::Error> {
+    // Compare a specific commit pair.
+    let old = repo.find_commit(old_id);
+    let new = repo.find_commit(new_id);
+    match (old, new) {
+        (Ok(old_commit), Ok(new_commit)) => {
+            let output = try!(find_moves(&repo, &old_commit, &new_commit));
+            Ok(OutputSet {
+                old: TransitOid(old_id),
+                old_time: old_commit.time().seconds(), // Seconds from Epoch
+                new: TransitOid(new_id),
+                new_time: new_commit.time().seconds(), // Seconds from Epoch
+                outputs: output,
+            })
+        },
+        _ => Err(git2::Error::from_str("Commit IDs were not valid.")),
+    }
+}
+
+fn process_repo(repo: Repository) -> Result<Vec<OutputSet>, git2::Error> {
+    // Pull up the revwalk.
+    // Revwalk.
+    let mut revwalk = try!(repo.revwalk());
+    // Setup some options.
+    revwalk.simplify_first_parent(); // TODO: Maybe remove?
+    let mut flags = git2::Sort::empty();
+    flags.insert(git2::SORT_TIME);
+    flags.insert(git2::SORT_TOPOLOGICAL);
+    revwalk.set_sorting(flags);
+    // Push HEAD to the revwalk.
+    try!(revwalk.push_head());
+    // We sadly must collect here to use `.windows()`
+    let history = revwalk.collect::<Vec<Oid>>();
+    let mut output = Vec::with_capacity(history.len());
+    // Walk through each pair of commits.
+    for pair in history.windows(2) {
+        let (old_id, new_id) = (pair[0], pair[1]);
+        if let (Ok(old), Ok(new)) = (repo.find_commit(old_id), repo.find_commit(new_id)) {
+            let detected = try!(find_moves(&repo, &old, &new));
+            output.push(OutputSet {
+                old: TransitOid(old_id),
+                old_time: old.time().seconds(), // Seconds from Epoch
+                new: TransitOid(new_id),
+                new_time: new.time().seconds(), // Seconds from Epoch
+                outputs: detected,
+            });
+        } else {
+            continue;
+        }
+    }
+    Ok(output)
 }
 
 fn format_key(key: String) -> String {
