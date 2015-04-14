@@ -14,9 +14,8 @@ docopt = "*"
 git2 = "*"
 regex = "*"
 regex_macros = "*"
+iron = "*"
+mount = "*"
 
-[dependencies.iron]
-git = "https://github.com/iron/iron.git"
-
-[dependencies.mount]
-git = "https://github.com/iron/mount.git"
+[dependencies.static]
+git = "https://github.com/iron/static.git"

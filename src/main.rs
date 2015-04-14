@@ -1,6 +1,7 @@
 #![feature(core)]
 #![feature(collections)]
 #![feature(ip_addr)]
+#![feature(slice_patterns)]
 
 #![feature(plugin)]
 #![plugin(regex_macros)] extern crate regex;
@@ -60,14 +61,14 @@ fn main() {
             .and_then(|string| Oid::from_str(&string[..]).ok());
         // Dispatch.
         if let (Some(old_id), Some(new_id)) = (old, new) {
-            let output = processor::process_commits(repo, old_id, new_id).unwrap();
+            let output = processor::commits(repo, old_id, new_id).unwrap();
             println!("{}", json::as_pretty_json(&output).indent(4));
         } else {
-            let output = processor::process_repo(repo).unwrap();
+            let output = processor::repo(repo).unwrap();
             println!("{}", json::as_pretty_json(&output).indent(4));
         };
 
     } else {
-        unreachable!();
+        println!("{}", USAGE);
     }
 }

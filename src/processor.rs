@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::str;
 
-pub fn process_commits(repo: Repository, old_id: Oid, new_id: Oid) -> Result<OutputSet, git2::Error> {
+pub fn commits(repo: Repository, old_id: Oid, new_id: Oid) -> Result<OutputSet, git2::Error> {
     // Compare a specific commit pair.
     let old = repo.find_commit(old_id);
     let new = repo.find_commit(new_id);
@@ -23,7 +23,7 @@ pub fn process_commits(repo: Repository, old_id: Oid, new_id: Oid) -> Result<Out
     }
 }
 
-pub fn process_repo(repo: Repository) -> Result<Vec<OutputSet>, git2::Error> {
+pub fn repo(repo: Repository) -> Result<Vec<OutputSet>, git2::Error> {
     // Pull up the revwalk.
     // Revwalk.
     let mut revwalk = try!(repo.revwalk());
