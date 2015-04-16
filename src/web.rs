@@ -3,10 +3,10 @@ extern crate mount;
 
 use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr;
-use std::path::Path;
 
 use iron::{Iron, Request, Response, IronResult};
 use iron::status;
+use iron::mime::{Mime, TopLevel, SubLevel};
 use mount::Mount;
 
 use git2::{Repository, Oid};
@@ -14,19 +14,34 @@ use rustc_serialize::json;
 
 use processor;
 
+const JQUERY: &'static str = include_str!("../assets/jquery.js");
+const INDEX: &'static str = include_str!("../assets/index.html");
+
 pub fn start(port: u16) {
     let addr = SocketAddr::new(IpAddr::from_str("127.0.0.1").unwrap(), port);
     let mut mount = Mount::new();
 
-    mount.mount("/", index);
+    mount.mount("/", assets);
     mount.mount("/api", api);
 
     Iron::new(mount).http(addr).unwrap();
 }
 
-fn index(req: &mut Request) -> IronResult<Response> {
+fn assets(req: &mut Request) -> IronResult<Response> {
     println!("Running index handler, URL path: {:?}", req.url.path);
-    Ok(Response::with((status::Ok, "Index!!")))
+    // Primitive until `iron/static` gets renamed.
+    match req.url.path.pop() {
+        Some(path) => {
+            if path == "" {
+                Ok(Response::with((status::Ok, Mime(TopLevel::Text, SubLevel::Html, vec![]), INDEX)))
+            } else if path == "jquery.js" {
+                Ok(Response::with((status::Ok, Mime(TopLevel::Application, SubLevel::Javascript, vec![]), JQUERY)))
+            } else {
+                Ok(Response::with((status::NotFound, "Realign your desires")))
+            }
+        },
+        None => unreachable!(),
+    }
 }
 
 fn api(req: &mut Request) -> IronResult<Response> {
