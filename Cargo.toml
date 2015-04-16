@@ -8,14 +8,20 @@ authors = [
   "Fraser D <fmd@uvic.ca>",
 ]
 
+[features]
+default = [ "hyper/nightly", ]
+
 [dependencies]
 rustc-serialize = "*"
 docopt = "*"
 git2 = "*"
 regex = "*"
 regex_macros = "*"
-iron = "*"
 mount = "*"
+iron = "*"
+
+[dependencies.hyper]
+version = "*"
 
 [dependencies.static]
 git = "https://github.com/iron/static.git"
