@@ -30,44 +30,42 @@ fn index(req: &mut Request) -> IronResult<Response> {
 }
 
 fn api(req: &mut Request) -> IronResult<Response> {
-    println!("Running repo handler, URL path: {:?}, Query: {:?}", req.url.path, req.url.query);
-    // match req.url.query {
-    //     3 => {
-    //         let path = Path::new(&req.url.path[0]);
-    //         let repo = match Repository::discover(&path) {
-    //             Ok(repo) => repo,
-    //             Err(_) => return Ok(Response::with((status::BadRequest, "Your input falls short of expectations"))),
-    //         };
-    //
-    //         let old = match Oid::from_str(&req.url.path[1][..]) {
-    //                Ok(oid) => oid,
-    //                Err(_) => return Ok(Response::with((status::BadRequest, "Your input falls short of expectations"))),
-    //         };
-    //         let new = match Oid::from_str(&req.url.path[2][..]) {
-    //                Ok(oid) => oid,
-    //                Err(_) => return Ok(Response::with((status::BadRequest, "Your input falls short of expectations"))),
-    //         };
-    //         let out = match processor::commits(repo, old, new) {
-    //             Ok(output) => output,
-    //             Err(_) => return Ok(Response::with((status::InternalServerError, "Hold steadfast and report bugs."))),
-    //         };
-    //
-    //         Ok(Response::with((status::Ok, json::encode(&out).unwrap())))
-    //     },
-    //     1 => {
-    //         let path = Path::new(&req.url.path[0]);
-    //         let repo = match Repository::discover(&path) {
-    //             Ok(repo) => repo,
-    //             Err(_) => return Ok(Response::with((status::BadRequest, "Your input falls short of expectations"))),
-    //         };
-    //
-    //         let out = match processor::repo(repo) {
-    //             Ok(output) => output,
-    //             Err(_) => return Ok(Response::with((status::InternalServerError, "Hold steadfast and report bugs."))),
-    //         };
-    //         Ok(Response::with((status::Ok, json::encode(&out).unwrap())))
-    //     },
-    //     _ => Ok(Response::with((status::NotFound, "Your work is nothingness.")))
-    // }
-
+    let query_pairs = req.url.clone().into_generic_url().query_pairs().unwrap_or(vec![]);
+    let mut repo = None;
+    let mut old = None;
+    let mut new = None;
+    for (key, val) in query_pairs {
+        match &key[..] {
+            "repo" => repo = match Repository::discover(&val) {
+                Ok(repo) => Some(repo),
+                Err(_) => return Ok(Response::with((status::BadRequest, "Repository Invalid."))),
+            },
+            "old" => old = match Oid::from_str(&val) {
+                Ok(commit) => Some(commit),
+                Err(_) => return Ok(Response::with((status::BadRequest, "Old Commit Invalid."))),
+            },
+            "new" => new = match Oid::from_str(&val) {
+                Ok(commit) => Some(commit),
+                Err(_) => return Ok(Response::with((status::BadRequest, "New Commit Invalid"))),
+            },
+            _ => return Ok(Response::with((status::BadRequest, "Your input falls short of expectations"))),
+        }
+    }
+    match (repo, old, new) {
+        (Some(repo), Some(old), Some(new)) => {
+            let out = match processor::commits(repo, old, new) {
+                Ok(output) => output,
+                Err(_) => return Ok(Response::with((status::InternalServerError, "Hold steadfast and report bugs."))),
+            };
+            Ok(Response::with((status::Ok, json::encode(&out).unwrap())))
+        },
+        (Some(repo), None, None) => {
+            let out = match processor::repo(repo) {
+                Ok(output) => output,
+                Err(_) => return Ok(Response::with((status::InternalServerError, "Hold steadfast and report bugs."))),
+            };
+            Ok(Response::with((status::Ok, json::encode(&out).unwrap())))
+        },
+        _ => Ok(Response::with((status::BadRequest, "Your input falls short of expectations")))
+    }
 }
