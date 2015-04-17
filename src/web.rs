@@ -14,8 +14,11 @@ use rustc_serialize::json;
 
 use processor;
 
-const JQUERY: &'static str = include_str!("../assets/jquery.js");
 const INDEX: &'static str = include_str!("../assets/index.html");
+const JQUERY: &'static str = include_str!("../assets/jquery.js");
+const D3JS: &'static str = include_str!("../assets/d3.v3.js");
+const C3JS: &'static str = include_str!("../assets/c3.js");
+const C3CSS: &'static str = include_str!("../assets/c3.css");
 
 pub fn start(port: u16) {
     let addr = SocketAddr::new(IpAddr::from_str("127.0.0.1").unwrap(), port);
@@ -23,12 +26,13 @@ pub fn start(port: u16) {
 
     mount.mount("/", assets);
     mount.mount("/api", api);
+    
+    println!("Now listening on port {}", port);
 
     Iron::new(mount).http(addr).unwrap();
 }
 
 fn assets(req: &mut Request) -> IronResult<Response> {
-    println!("Running index handler, URL path: {:?}", req.url.path);
     // Primitive until `iron/static` gets renamed.
     match req.url.path.pop() {
         Some(path) => {
@@ -36,6 +40,12 @@ fn assets(req: &mut Request) -> IronResult<Response> {
                 Ok(Response::with((status::Ok, Mime(TopLevel::Text, SubLevel::Html, vec![]), INDEX)))
             } else if path == "jquery.js" {
                 Ok(Response::with((status::Ok, Mime(TopLevel::Application, SubLevel::Javascript, vec![]), JQUERY)))
+            } else if path == "d3.js" {
+                Ok(Response::with((status::Ok, Mime(TopLevel::Application, SubLevel::Javascript, vec![]), D3JS)))
+            } else if path == "c3.js" {
+                Ok(Response::with((status::Ok, Mime(TopLevel::Application, SubLevel::Javascript, vec![]), C3JS)))
+            } else if path == "c3.css" {
+                Ok(Response::with((status::Ok, Mime(TopLevel::Text, SubLevel::Css, vec![]), C3CSS)))
             } else {
                 Ok(Response::with((status::NotFound, "Realign your desires")))
             }

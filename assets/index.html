@@ -1,8 +1,74 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8" /> 
+        <link rel=stylesheet href=/c3.css>
+        <script src=/d3.js></script>
+        <script src=/c3.js></script>
     </head>
     <body>
+        <main>
 
+        </main>
+        <script>
+            window.onload = function init() {
+                console.log("Initializing...");
+                window.dispatchEvent(new CustomEvent("build_form"));
+            }
+            window.addEventListener("build_form", function build_form() {
+                console.log("Building form...");
+                var body = document.querySelector("body"),
+                    main = document.querySelector("main"),
+                    // Form items.
+                    formId = document.querySelector("#form"),
+                    formNode = document.importNode(formId.content, true);
+                body.replaceChild(formNode, main);
+            });
+        </script>
+        <template id=viewer>
+            <p>Viewer!</p>
+        </template>
+        <template id=loader>
+            <p>Loader!</p>
+        </template>
+        <template id=form>
+            <form>
+                <legend>Transit Query</legend>
+                <label for=repo>Repository</label>
+                <input name=repo>
+                <label for=old>Old Commit ID</label>
+                <input name=old>
+                <label for=new>New Commit ID</label>
+                <input name=new>
+                <input type=submit value=Query>
+            </form>
+            <script>
+                // https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Sending_forms_through_JavaScript
+                var form = document.querySelector("form");
+                console.log(form);
+                form.addEventListener("submit", function submit(event) {
+                    console.log("Submitting...");
+                    event.preventDefault();
+                    var xhr = new XMLHttpRequest(),
+                        data = new FormData(form);
+                    xhr.open("GET", "/api", true);
+                    xhr.addEventListener("load", function (event) {
+                        if (xhr.readyState === 4) { // Complete
+                            if (xhr.status === 200) {
+                                window.dispatchEvent(new CustomEvent("build_viewer", data));
+                            } else {
+                                window.dispatchEvent(new CustomEvent("build_error", data));
+                            }
+                        }
+                    });
+                    xhr.addEventListener("error", function(event) {
+                        alert('Oups! Something goes wrong.');
+                    });
+                    console.log(data);
+                    xhr.send(data);
+                    return false;
+                });
+            </script>
+        </template>
     </body>
 </html>
