@@ -70,6 +70,7 @@
                 main.replaceChild(viewerNode, main.querySelector("section"));
                 // Create chart.
                 c3.generate({
+                    bindto: "#chart",
                     data: {
                         x: 'times',
                         json: event.detail,
@@ -97,18 +98,79 @@
         </script>
         <template id=viewer>
             <section>
-                <div id="chart">
+                <div id="chart"></div>
+                <h3>Help</h3>
+                <p>Drag your mouse on the bottom graph to zoom in on the top graph and get closer to your data.</p>
             </section>
         </template>
         <template id=loader>
             <section>
-                <p>Loadering!</p>
+                <div class="loader">Loading...</div>
+                <style>
+                    .loader:before,
+                    .loader:after,
+                    .loader {
+                      border-radius: 50%;
+                      width: 2.5em;
+                      height: 2.5em;
+                      -webkit-animation-fill-mode: both;
+                      animation-fill-mode: both;
+                      -webkit-animation: load7 1.8s infinite ease-in-out;
+                      animation: load7 1.8s infinite ease-in-out;
+                    }
+                    .loader {
+                      margin: 8em auto;
+                      font-size: 10px;
+                      position: relative;
+                      text-indent: -9999em;
+                      -webkit-transform: translateZ(0);
+                      -ms-transform: translateZ(0);
+                      transform: translateZ(0);
+                      -webkit-animation-delay: -0.16s;
+                      animation-delay: -0.16s;
+                    }
+                    .loader:before {
+                      left: -3.5em;
+                      -webkit-animation-delay: -0.32s;
+                      animation-delay: -0.32s;
+                    }
+                    .loader:after {
+                      left: 3.5em;
+                    }
+                    .loader:before,
+                    .loader:after {
+                      content: '';
+                      position: absolute;
+                      top: 0;
+                    }
+                    @-webkit-keyframes load7 {
+                      0%,
+                      80%,
+                      100% {
+                        box-shadow: 0 2.5em 0 -1.3em #000;
+                      }
+                      40% {
+                        box-shadow: 0 2.5em 0 0 #000;
+                      }
+                    }
+                    @keyframes load7 {
+                      0%,
+                      80%,
+                      100% {
+                        box-shadow: 0 2.5em 0 -1.3em #000;
+                      }
+                      40% {
+                        box-shadow: 0 2.5em 0 0 #000;
+                      }
+                    }
+
+                </style>
             </section>
         </template>
         <template id=form>
             <section>
                 <form>
-                    <legend>Transit Query</legend>
+                    <legend><h3>Transit Query</h3></legend>
                     <label for=repo>Repository</label>
                     <input id=repo>
                     <label for=old>Old Commit ID</label>
