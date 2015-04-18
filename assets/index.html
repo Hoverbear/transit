@@ -21,17 +21,54 @@
                     formNode = document.importNode(document.querySelector("#form").content, true);
                 main.replaceChild(formNode, main.querySelector("section"));
             });
-            window.addEventListener("build_viewer", function build_form(results) {
+            window.addEventListener("build_viewer", function build_form(event) {
                 console.log("Building viewer...");
-                console.log(results.detail);
                 var main = document.querySelector("main"),
                     viewerNode = document.importNode(document.querySelector("#viewer").content, true);
                 main.replaceChild(viewerNode, main.querySelector("section"));
+                // Preprocess data.
+                // C3 is fairly opinionated about how data should be structured.
+                var times = [], moves = [], additions = [], deletions = [];
+                event.detail.map(function (output) {
+                    // Use new time since it's when the actual change happened.
+                    times.push(new Date(output.new_time * 1000)); // JS is milliseconds, rust is seconds.
+                    moves.push(output.outputs.reduce(function (sum, val) {
+                        return sum + val.num_lines;
+                    }, 0));
+                    additions.push(0); // TODO
+                    deletions.push(0); // TODO
+                });
+                // Emit draw event.
+                window.dispatchEvent(new CustomEvent("draw_chart", { detail: {
+                    times: times,
+                    moves: moves,
+                    additions: additions,
+                    deletions: deletions,
+                }}));
             });
         </script>
         <template id=viewer>
             <section>
-                <p>Viewer!</p>
+                <div id="chart">
+                <script>
+                    window.addEventListener("draw_chart", function draw_chart(event) {
+                        console.log("Drawing chart...");
+                        c3.generate({
+                            data: {
+                                x: 'times',
+                                json: event.detail,
+                            },
+                            axis: {
+                                x: {
+                                    type: 'timeseries',
+                                    tick: {
+                                        format: '%Y-%m-%d %H:%M'
+                                    }
+                                }
+                            }
+                        });
+                    });
+                </script>
             </section>
         </template>
         <template id=loader>
@@ -74,7 +111,7 @@
                         xhr.addEventListener("load", function (event) {
                             if (xhr.readyState === 4) { // Complete
                                 if (xhr.status === 200) {
-                                    window.dispatchEvent(new CustomEvent("build_viewer", { detail: xhr.responseText }));
+                                    window.dispatchEvent(new CustomEvent("build_viewer", { detail: JSON.parse(xhr.responseText) }));
                                 } else {
                                     window.dispatchEvent(new CustomEvent("build_error", { detail: xhr.responseText }));
                                 }
