@@ -21,69 +21,88 @@
                     formNode = document.importNode(document.querySelector("#form").content, true);
                 main.replaceChild(formNode, main.querySelector("section"));
             });
+            window.addEventListener("build_loader", function build_loader(event) {
+                console.log("Building loader...");
+                var main = document.querySelector("main"),
+                    loaderNode = document.importNode(document.querySelector("#loader").content, true);
+                main.replaceChild(loaderNode, main.querySelector("section"));
+                // Make the request and process the data.
+                // Make request.
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "/api?" + event.detail, true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.addEventListener("load", function (event) {
+                    if (xhr.readyState === 4) { // Complete
+                        if (xhr.status === 200) {
+                            // Preprocess data.
+                            // C3 is fairly opinionated about how data should be structured.
+                            var times = [], moves = [], additions = [], deletions = [];
+                            JSON.parse(xhr.responseText).map(function (output) {
+                                // Use new time since it's when the actual change happened.
+                                times.push(new Date(output.new_time * 1000)); // JS is milliseconds, rust is seconds.
+                                moves.push(output.outputs.reduce(function (sum, val) {
+                                    return sum + val.num_lines;
+                                }, 0));
+                                additions.push(0); // TODO
+                                deletions.push(0); // TODO
+                            });
+                            // Emit draw event.
+                            window.dispatchEvent(new CustomEvent("build_viewer", { detail: {
+                                times: times,
+                                moves: moves,
+                                additions: additions,
+                                deletions: deletions,
+                            }}));
+                        } else {
+                            window.dispatchEvent(new CustomEvent("build_error", { detail: xhr.responseText }));
+                        }
+                    }
+                });
+                xhr.addEventListener("error", function(event) {
+                    alert("There was an error.");
+                });
+                xhr.send(null);
+            });
             window.addEventListener("build_viewer", function build_form(event) {
                 console.log("Building viewer...");
                 var main = document.querySelector("main"),
                     viewerNode = document.importNode(document.querySelector("#viewer").content, true);
                 main.replaceChild(viewerNode, main.querySelector("section"));
-                // Preprocess data.
-                // C3 is fairly opinionated about how data should be structured.
-                var times = [], moves = [], additions = [], deletions = [];
-                event.detail.map(function (output) {
-                    // Use new time since it's when the actual change happened.
-                    times.push(new Date(output.new_time * 1000)); // JS is milliseconds, rust is seconds.
-                    moves.push(output.outputs.reduce(function (sum, val) {
-                        return sum + val.num_lines;
-                    }, 0));
-                    additions.push(0); // TODO
-                    deletions.push(0); // TODO
+                // Create chart.
+                c3.generate({
+                    data: {
+                        x: 'times',
+                        json: event.detail,
+                        types: {
+                            moves: "area",
+                            additions: "area",
+                            deletions: "area",
+                        },
+                        groups: [[ "moves", "additions", "deletions" ]],
+                    },
+                    axis: {
+                        x: {
+                            type: 'timeseries',
+                            tick: {
+                                centered: true,
+                                format: '%Y-%m-%d'
+                            }
+                        }
+                    },
+                    subchart: {
+                        show: true,
+                    },
                 });
-                // Emit draw event.
-                window.dispatchEvent(new CustomEvent("draw_chart", { detail: {
-                    times: times,
-                    moves: moves,
-                    additions: additions,
-                    deletions: deletions,
-                }}));
             });
         </script>
         <template id=viewer>
             <section>
                 <div id="chart">
-                <script>
-                    window.addEventListener("draw_chart", function draw_chart(event) {
-                        console.log("Drawing chart...");
-                        c3.generate({
-                            data: {
-                                x: 'times',
-                                json: event.detail,
-                                types: {
-                                    moves: "area",
-                                    additions: "area",
-                                    deletions: "area",
-                                },
-                                groups: [[ "moves", "additions", "deletions" ]],
-                            },
-                            axis: {
-                                x: {
-                                    type: 'timeseries',
-                                    tick: {
-                                        centered: true,
-                                        format: '%Y-%m-%d'
-                                    }
-                                }
-                            },
-                            subchart: {
-                                show: true,
-                            },
-                        });
-                    });
-                </script>
             </section>
         </template>
         <template id=loader>
             <section>
-                <p>Loader!</p>
+                <p>Loadering!</p>
             </section>
         </template>
         <template id=form>
@@ -103,8 +122,7 @@
                     document.querySelector("form").addEventListener("submit", function submit(event) {
                         console.log("Submitting...");
                         event.preventDefault();
-                        var xhr = new XMLHttpRequest(),
-                            query = [];
+                        var query = [];
                         // Build query
                         ["repo", "old", "new"].forEach(function (val) {
                             var node = document.getElementById(val),
@@ -115,22 +133,7 @@
                             }
                         });
                         query = query.join('&').replace(/%20/g, '+');
-                        // Make request.
-                        xhr.open("GET", "/api?" + query, true);
-                        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                        xhr.addEventListener("load", function (event) {
-                            if (xhr.readyState === 4) { // Complete
-                                if (xhr.status === 200) {
-                                    window.dispatchEvent(new CustomEvent("build_viewer", { detail: JSON.parse(xhr.responseText) }));
-                                } else {
-                                    window.dispatchEvent(new CustomEvent("build_error", { detail: xhr.responseText }));
-                                }
-                            }
-                        });
-                        xhr.addEventListener("error", function(event) {
-                            alert("There was an error.");
-                        });
-                        xhr.send(null);
+                        window.dispatchEvent(new CustomEvent("build_loader", { detail: query }));
                         return false;
                     });
                 </script>
