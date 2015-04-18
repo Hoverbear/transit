@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset="utf-8" /> 
+        <meta charset="utf-8" />
         <link rel=stylesheet href=/c3.css>
         <script src=/d3.js></script>
         <script src=/c3.js></script>
     </head>
     <body>
         <main>
-
+            <section><!-- Placeholder --></section>
         </main>
         <script>
             window.onload = function init() {
@@ -17,58 +17,77 @@
             }
             window.addEventListener("build_form", function build_form() {
                 console.log("Building form...");
-                var body = document.querySelector("body"),
-                    main = document.querySelector("main"),
-                    // Form items.
-                    formId = document.querySelector("#form"),
-                    formNode = document.importNode(formId.content, true);
-                body.replaceChild(formNode, main);
+                var main = document.querySelector("main"),
+                    formNode = document.importNode(document.querySelector("#form").content, true);
+                main.replaceChild(formNode, main.querySelector("section"));
+            });
+            window.addEventListener("build_viewer", function build_form(results) {
+                console.log("Building viewer...");
+                console.log(results.detail);
+                var main = document.querySelector("main"),
+                    viewerNode = document.importNode(document.querySelector("#viewer").content, true);
+                main.replaceChild(viewerNode, main.querySelector("section"));
             });
         </script>
         <template id=viewer>
-            <p>Viewer!</p>
+            <section>
+                <p>Viewer!</p>
+            </section>
         </template>
         <template id=loader>
-            <p>Loader!</p>
+            <section>
+                <p>Loader!</p>
+            </section>
         </template>
         <template id=form>
-            <form>
-                <legend>Transit Query</legend>
-                <label for=repo>Repository</label>
-                <input name=repo>
-                <label for=old>Old Commit ID</label>
-                <input name=old>
-                <label for=new>New Commit ID</label>
-                <input name=new>
-                <input type=submit value=Query>
-            </form>
-            <script>
-                // https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Sending_forms_through_JavaScript
-                var form = document.querySelector("form");
-                console.log(form);
-                form.addEventListener("submit", function submit(event) {
-                    console.log("Submitting...");
-                    event.preventDefault();
-                    var xhr = new XMLHttpRequest(),
-                        data = new FormData(form);
-                    xhr.open("GET", "/api", true);
-                    xhr.addEventListener("load", function (event) {
-                        if (xhr.readyState === 4) { // Complete
-                            if (xhr.status === 200) {
-                                window.dispatchEvent(new CustomEvent("build_viewer", data));
-                            } else {
-                                window.dispatchEvent(new CustomEvent("build_error", data));
+            <section>
+                <form>
+                    <legend>Transit Query</legend>
+                    <label for=repo>Repository</label>
+                    <input id=repo>
+                    <label for=old>Old Commit ID</label>
+                    <input id=old>
+                    <label for=new>New Commit ID</label>
+                    <input id=new>
+                    <input type=submit value=Query>
+                </form>
+                <script>
+                    // https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/Sending_forms_through_JavaScript
+                    document.querySelector("form").addEventListener("submit", function submit(event) {
+                        console.log("Submitting...");
+                        event.preventDefault();
+                        var xhr = new XMLHttpRequest(),
+                            query = [];
+                        // Build query
+                        ["repo", "old", "new"].forEach(function (val) {
+                            var node = document.getElementById(val),
+                                id = node.id,
+                                value = node.value;
+                            if (id && value) {
+                                query.push(encodeURIComponent(id) + "=" + encodeURIComponent(value));
                             }
-                        }
+                        });
+                        query = query.join('&').replace(/%20/g, '+');
+                        // Make request.
+                        xhr.open("GET", "/api?" + query, true);
+                        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                        xhr.addEventListener("load", function (event) {
+                            if (xhr.readyState === 4) { // Complete
+                                if (xhr.status === 200) {
+                                    window.dispatchEvent(new CustomEvent("build_viewer", { detail: xhr.responseText }));
+                                } else {
+                                    window.dispatchEvent(new CustomEvent("build_error", { detail: xhr.responseText }));
+                                }
+                            }
+                        });
+                        xhr.addEventListener("error", function(event) {
+                            alert("There was an error.");
+                        });
+                        xhr.send(null);
+                        return false;
                     });
-                    xhr.addEventListener("error", function(event) {
-                        alert('Oups! Something goes wrong.');
-                    });
-                    console.log(data);
-                    xhr.send(data);
-                    return false;
-                });
-            </script>
+                </script>
+            </section>
         </template>
     </body>
 </html>

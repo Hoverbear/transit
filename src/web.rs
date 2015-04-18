@@ -15,7 +15,6 @@ use rustc_serialize::json;
 use processor;
 
 const INDEX: &'static str = include_str!("../assets/index.html");
-const JQUERY: &'static str = include_str!("../assets/jquery.js");
 const D3JS: &'static str = include_str!("../assets/d3.v3.js");
 const C3JS: &'static str = include_str!("../assets/c3.js");
 const C3CSS: &'static str = include_str!("../assets/c3.css");
@@ -38,8 +37,6 @@ fn assets(req: &mut Request) -> IronResult<Response> {
         Some(path) => {
             if path == "" {
                 Ok(Response::with((status::Ok, Mime(TopLevel::Text, SubLevel::Html, vec![]), INDEX)))
-            } else if path == "jquery.js" {
-                Ok(Response::with((status::Ok, Mime(TopLevel::Application, SubLevel::Javascript, vec![]), JQUERY)))
             } else if path == "d3.js" {
                 Ok(Response::with((status::Ok, Mime(TopLevel::Application, SubLevel::Javascript, vec![]), D3JS)))
             } else if path == "c3.js" {
