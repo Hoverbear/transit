@@ -57,15 +57,25 @@
                             data: {
                                 x: 'times',
                                 json: event.detail,
+                                types: {
+                                    moves: "area",
+                                    additions: "area",
+                                    deletions: "area",
+                                },
+                                groups: [[ "moves", "additions", "deletions" ]],
                             },
                             axis: {
                                 x: {
                                     type: 'timeseries',
                                     tick: {
-                                        format: '%Y-%m-%d %H:%M'
+                                        centered: true,
+                                        format: '%Y-%m-%d'
                                     }
                                 }
-                            }
+                            },
+                            subchart: {
+                                show: true,
+                            },
                         });
                     });
                 </script>
