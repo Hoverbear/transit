@@ -96,7 +96,9 @@
                     tooltip: {
                         format: {
                             title: function (index) {
-                                return event.detail[index].old + " ⇒ " + event.detail[index].new;
+                                var commits = "Commits: " + event.detail[index].old + " ⇒ " + event.detail[index].new,
+                                    times = "Times: " + event.detail[index].old_time + " ⇒ " + event.detail[index].new_time;
+                                return commits + "<br>" + times;
                             },
                         },
                     },
