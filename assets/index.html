@@ -36,23 +36,21 @@
                         if (xhr.status === 200) {
                             // Preprocess data.
                             // C3 is fairly opinionated about how data should be structured.
-                            var times = [], moves = [], additions = [], deletions = [];
-                            JSON.parse(xhr.responseText).map(function (output) {
+                            var output = JSON.parse(xhr.responseText).map(function (output) {
                                 // Use new time since it's when the actual change happened.
-                                times.push(new Date(output.new_time * 1000)); // JS is milliseconds, rust is seconds.
-                                moves.push(output.outputs.reduce(function (sum, val) {
+                                output.new_time = new Date(output.new_time * 1000); // JS is milliseconds, rust is seconds.
+                                output.old_time = new Date(output.old_time * 1000); // JS is milliseconds, rust is seconds.
+                                output.moves = output.outputs.reduce(function (sum, val) {
                                     return sum + val.num_lines;
-                                }, 0));
-                                additions.push(0); // TODO
-                                deletions.push(0); // TODO
+                                }, 0);
+                                delete output.outputs
+                                output.additions = 0; // TODO
+                                output.deletions = 0; // TODO
+                                return output;
                             });
+                            console.log(output);
                             // Emit draw event.
-                            window.dispatchEvent(new CustomEvent("build_viewer", { detail: {
-                                times: times,
-                                moves: moves,
-                                additions: additions,
-                                deletions: deletions,
-                            }}));
+                            window.dispatchEvent(new CustomEvent("build_viewer", { detail: output }));
                         } else {
                             window.dispatchEvent(new CustomEvent("build_error", { detail: xhr.responseText }));
                         }
@@ -72,7 +70,6 @@
                 c3.generate({
                     bindto: "#chart",
                     data: {
-                        x: 'times',
                         json: event.detail,
                         colors: {
                             moves: "#0000FF",
@@ -80,20 +77,28 @@
                             deletions: "#FF0000",
                         },
                         types: {
-                            moves: "area",
-                            additions: "area",
-                            deletions: "area",
+                            moves: "area-step",
+                            additions: "area-step",
+                            deletions: "area-step",
                         },
-                        groups: [[ "moves", "additions", "deletions" ]],
+                        keys: {
+                            value: [ "moves", "additions", "deletions", ],
+                        },
+                        groups: [[ "moves", "additions", "deletions", ]],
                     },
                     axis: {
                         x: {
-                            type: 'timeseries',
                             tick: {
                                 centered: true,
-                                format: '%Y-%m-%d'
-                            }
-                        }
+                            },
+                        },
+                    },
+                    tooltip: {
+                        format: {
+                            title: function (index) {
+                                return event.detail[index].old + " ⇒ " + event.detail[index].new;
+                            },
+                        },
                     },
                     subchart: {
                         show: true,
