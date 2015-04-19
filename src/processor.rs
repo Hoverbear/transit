@@ -1,5 +1,5 @@
 use {git2, rustc_serialize};
-use git2::{Repository, Commit, Diff, DiffFormat, Oid};
+use git2::{Repository, Commit, Diff, DiffFormat, Oid, DiffDelta};
 use std::collections::HashMap;
 use std::fmt;
 use std::str;
@@ -63,10 +63,80 @@ enum FoundState {
 }
 
 fn format_key(key: String) -> String {
-    let remove_whitespace = regex!(r"\s{2,}"); // 2 or more whitespaces    // TODO Removes whitespace from a string.
+    let remove_whitespace = regex!(r"\s{2,}"); // 2 or more whitespaces
     let trim = regex!(r"^[\s]+|[\s]+$");
     let result = remove_whitespace.replace_all(&key[..], "");
     trim.replace_all(&result[..], "")
+}
+
+fn format_key_rust(key: String) -> String {
+    let trimmed = format_key(key);
+    let rust_vars = regex!(r"let\s+(?P<mut>mut\s+)?\s*(?P<vars>[a-zA-Z0-09_\(\),\s]+)");
+
+    // TODO Remove this after debugging. It hides extra output for debugging.
+    if !rust_vars.is_match(&trimmed[..]) {
+        return trimmed;
+    }
+
+    println!("\n==========\ntrimmed={:?}", trimmed);
+
+    let mut replacements: HashMap<String, String> = HashMap::new();
+
+    let mut new_key = String::new();
+    let mut count : u64 = 0;
+    let mut index : usize = 0;
+
+    for capture in rust_vars.captures_iter(&trimmed[..]) {
+
+        //println!("pos0: {:?}, pos1: {:?}, pos2: {:?}", capture.pos(0), capture.pos(1), capture.pos(2));
+
+        let whole_capture_start_pos = capture.pos(0).unwrap().0;
+        let whole_capture_last_pos  = capture.pos(0).unwrap().1;
+
+        if index < whole_capture_start_pos {
+            let sliced = trimmed.slice_chars(index, whole_capture_start_pos);
+            //println!("leading sliced={:?}", sliced);
+            new_key = format!("{}{}", new_key, sliced);
+            index = whole_capture_start_pos;
+        }
+
+        let var_key = format!("v{}", count);
+        let var_value = format!("{}", capture.name("vars").unwrap());   // TODO Trim
+
+        index = capture.pos(2).unwrap().1;
+
+        // If contains ( or ), ignore for now.
+        let rust_tuple = regex!(r"([a-zA-Z0-9_]+)(\s*,\s*)?");
+        /* Tuple vars
+        (a, b)
+        (Ok(a), Ok(b))
+        (
+
+        */
+
+        new_key = format!("{}let {}{} ", new_key, capture.name("mut").unwrap_or(""), var_key);
+
+/*
+        let var_capture_last_pos = capture.pos(2).unwrap().1;
+
+        let sliced = trimmed.slice_chars(var_capture_last_pos, whole_capture_last_pos);
+        println!("trailing sliced={:?}", sliced);
+        new_key = format!("{}{}", new_key, sliced);
+        index = whole_capture_last_pos;
+*/
+        replacements.insert(var_key, var_value);
+
+        // TODO Do replacements.
+
+        count += 1;
+    }
+
+    // Grab remainder of string.
+    new_key = format!("{}{}", new_key, trimmed.slice_chars(index, trimmed.len()));
+
+    println!("new_key={:?}", new_key);
+
+    new_key
 }
 
 #[derive(Debug)]
@@ -81,6 +151,24 @@ struct Found {
 #[derive(Debug)]
 enum State {
     Other, Addition, Deletion
+}
+
+fn which_key_format_function(delta : DiffDelta) -> (fn(String) -> String) {
+    let oldpath = delta.old_file().path().unwrap(); // TODO Do additions have old files?
+    let newpath = delta.new_file().path().unwrap(); // TODO Do deletions have new files?
+
+    if oldpath.extension() != newpath.extension() {
+        println!("File extensions are different.");
+        return format_key;
+    }
+
+    if let Some(ext) = oldpath.extension() {
+        if ext == "rs" {
+            return format_key_rust;
+        }
+    }
+
+    return format_key;
 }
 
 fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
@@ -129,6 +217,8 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
             Some(path) => String::from_str(path),
             None => return false,
         };
+
+        let format_key = which_key_format_function(delta);
 
         match line.origin() {
             // Additions
