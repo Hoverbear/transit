@@ -97,6 +97,12 @@ Transit found 7 moves in this repository. Of those 7 moves, two were single line
 
 Transit found 91 moves in this repository. Of those 91 moves, 42 were single line moves.
 
+### Hyper
+
+![Image of Output from transit against hyper](/example_runs/hyper.png)
+
+Hovering over the tooltips on a graph allows a researcher to see detailed numbers, and clicking at the tip of a data point will alert with commit its for later examination with `git diff -p $OLD_ID $NEW_ID`.
+
 #### Overall
 
 Transit is successful in detecting code moves.
