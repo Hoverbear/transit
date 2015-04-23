@@ -27,38 +27,36 @@ You will need the [Rust](http://rust-lang.org/) compiler:
 ```bash
 curl -L https://static.rust-lang.org/rustup.sh | rustup
 chmod +x rustup
-sudo rustup --channel=nightly
+sudo rustup --channel=nightly --date=2015-04-16
 ```
+
+> Currently, `transit` does not track `master`, we have included an appropriate `Cargo.lock`.
 
 This should install `cargo` and `rustc`. Clone the repository and build it:
 
 ```bash
 git clone git@github.com:Hoverbear/transit.git && \
 cd transit && \
-cargo build
+cargo build --release
 ```
 
 Now you can run the binary on any repository, even itself! It will output JSON.
 
 ```bash
-./target/debug/transit .
+./target/release/transit .
 ```
 
-#### Installing `transit-display`
-
-To use the (optional) output viewer, install `nodejs` and `npm` using your preferred package manager. `brew`, `pacman`, `apt`, and `yum` all have official packages and they will do. Then:
+Or view a fancy web output. (Reccomended)
 
 ```bash
-cd transit-display &&
-npm install &&
-npm start
+./target/release/transit --web=8080
 ```
 
-From there you can:
+Now visit `localhost:8080` and enter `.` into the Repository field. Git the button and wait a second, you should see some pictures in a second.
 
-* Visit `http://localhost:3000/transit` in your web browser to see some mock data.
-* Query a repo use an invocation such as `http://localhost:3000/transit?repopath=../test/basic&repo=transit`. Where `repopath` is the path to your repository, and `repo` is the title of the project (for display only).
-* Visit `http://localhost:3000/select` to choose a repository.
+### Metrics
+
+We tracked # of lines added and deleted along a revwalk and also algorithmically calculated the number of a specific type of refactors, code moves. We developed a tool and visualization software to do this.
 
 ### Results
 
@@ -75,13 +73,13 @@ The outputs are stored in `./examples_runs/`.
 
 #### capnproto-rust
 
-Due to the length of the output, the results from `capnproto-rust` is stored in a [json](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/capn-proto.json) file.
+Due to the length of the output, the results from `capnproto-rust` is stored in a [json](/example_runs/capn-proto.json) file.
 
 Transit found 52 moves in this repository. Of those 52 moves, 30 were single line moves.
 
 #### rust-url
 
-![Image of output from transit ran against rust-url](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/rust-url.png)
+![Image of output from transit ran against rust-url](/example_runs/rust-url.png)
 
 Transit found 8 moves in this repository. Of those 8 moves, 1 was a single line move. The majority of these moves were 100+ lines of code.
 
@@ -89,13 +87,13 @@ On closer inspection, the 3 line move in commit https://github.com/servo/rust-ur
 
 #### git2-rs
 
-![Image of output from transit ran against git2-rs](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/git2-rs.png)
+![Image of output from transit ran against git2-rs](/example_runs/git2-rs.png)
 
 Transit found 7 moves in this repository. Of those 7 moves, two were single line moves.
 
 #### connect
 
-![Image of output from transit ran against connect](https://github.com/Hoverbear/transit/blob/f4c33e652510310607032da7b28af0741e739b7f/example_runs/connect.png)
+![Image of output from transit ran against connect](/example_runs/connect.png)
 
 Transit found 91 moves in this repository. Of those 91 moves, 42 were single line moves.
 
@@ -113,7 +111,9 @@ Andrew Hobden | @Hoverbear
 Brody Holden | @BrodyHolden
 Fraser DeLisle | @fraserd
 
-Date | Milestone | Complete
+### Milestone 1
+
+Date | Task | Complete
 ----------- | ------------- | -----
 February 3 | Initial prototype of project system | Yes
 February 10 | Well-defined project output | Yes
@@ -126,6 +126,24 @@ February 22 | Finalized report | Yes
 February 23 | Submit final project | Yes
 
 A break down of which work tasks were completed by which team members is tracked in issue [#2](https://github.com/Hoverbear/transit/issues/2).
+
+### Milestone 2
+
+Work completed for this milestone was tracked [here](https://github.com/Hoverbear/transit/issues?q=milestone%3ADeadline) by issue.
+
+By [task and owner here](https://github.com/Hoverbear/transit/issues/6).
+
+### Threats to Validity
+
+We don't track all possible code moves. Currently we only strip whitespace. Plans to include language support were lost due to being inaccurately told the deadline by @ycoady.
+
+The moves we do detect may be false positives. This is expected due to the non-precise nature of dealing with diffs and the naivity of our algorithm.
+
+### Future Work
+
+* Language Support (Pending @brodyholden)
+* Streamed Results
+* More accurate results
 
 ### Resources
 
