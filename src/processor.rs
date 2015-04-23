@@ -10,13 +10,25 @@ pub fn commits(repo: Repository, old_id: Oid, new_id: Oid) -> Result<OutputSet, 
     let new = repo.find_commit(new_id);
     match (old, new) {
         (Ok(old_commit), Ok(new_commit)) => {
-            let output = try!(find_moves(&repo, &old_commit, &new_commit));
+            let (old_tree, new_tree) = (try!(old_commit.tree()), try!(new_commit.tree()));
+            let diff = try!(Diff::tree_to_tree(&repo, Some(&old_tree), Some(&new_tree), None));
+            let mut adds_deletes = find_additions_and_deletions(diff);
+            let (adds, deletes) = adds_deletes.iter().fold((0,0), |acc, item| {
+                match item.state {
+                    FoundState::Added=> (acc.0 + item.line_count, acc.1),
+                    FoundState::Deleted => (acc.0 + item.line_count, acc.1),
+                }
+            });
+            let moves = try!(find_moves(&mut adds_deletes));
+            let moved_lines = moves.iter().fold(0, |acc, item| acc + item.num_lines);
             Ok(OutputSet {
                 old: TransitOid(old_id),
                 old_time: old_commit.time().seconds(), // Seconds from Epoch
                 new: TransitOid(new_id),
                 new_time: new_commit.time().seconds(), // Seconds from Epoch
-                outputs: output,
+                outputs: moves,
+                added_lines: adds - moved_lines,
+                deleted_lines: deletes - moved_lines,
             })
         },
         _ => Err(git2::Error::from_str("Commit IDs were not valid.")),
@@ -41,23 +53,33 @@ pub fn repo(repo: Repository) -> Result<Vec<OutputSet>, git2::Error> {
     // Walk through each pair of commits.
     for pair in history.windows(2) {
         let (old_id, new_id) = (pair[0], pair[1]);
-        if let (Ok(old), Ok(new)) = (repo.find_commit(old_id), repo.find_commit(new_id)) {
-            let out = OutputSet {
-                old: TransitOid(old_id),
-                old_time: old.time().seconds(), // Seconds from Epoch
-                new: TransitOid(new_id),
-                new_time: new.time().seconds(), // Seconds from Epoch
-                outputs: try!(find_moves(&repo, &old, &new)),
-            };
-            output.push(out);
-        } else {
-            continue;
-        }
+        let (old_commit, new_commit) = (try!(repo.find_commit(old_id)), try!(repo.find_commit(new_id)));
+        let (old_tree, new_tree) = (try!(old_commit.tree()), try!(new_commit.tree()));
+        let diff = try!(Diff::tree_to_tree(&repo, Some(&old_tree), Some(&new_tree), None));
+        let mut adds_deletes = find_additions_and_deletions(diff);
+        let (adds, deletes) = adds_deletes.iter().fold((0,0), |acc, item| {
+            match item.state {
+                FoundState::Added => (acc.0 + item.line_count, acc.1),
+                FoundState::Deleted => (acc.0, acc.1 + item.line_count),
+            }
+        });
+        let moves = try!(find_moves(&mut adds_deletes));
+        let moved_lines = moves.iter().fold(0, |acc, item| acc + item.num_lines);
+        let out = OutputSet {
+            old: TransitOid(old_id),
+            old_time: old_commit.time().seconds(), // Seconds from Epoch
+            new: TransitOid(new_id),
+            new_time: new_commit.time().seconds(), // Seconds from Epoch
+            outputs: moves,
+            added_lines: adds - moved_lines,
+            deleted_lines: deletes - moved_lines,
+        };
+        output.push(out);
     }
     Ok(output)
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum FoundState {
     Added, Deleted
 }
@@ -69,7 +91,7 @@ fn format_key(key: String) -> String {
     trim.replace_all(&result[..], "")
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Found {
     filename: String,
     key: String,
@@ -269,14 +291,7 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
     return founds;
 }
 
-fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Output>, git2::Error> {
-    let old_tree = try!(old.tree());
-    let new_tree = try!(new.tree());
-    // Build up a diff of the two trees.
-    let diff = try!(Diff::tree_to_tree(repo, Some(&old_tree), Some(&new_tree), None));
-
-    let founds: Vec<Found> = find_additions_and_deletions(diff);
-
+fn find_moves(founds: &mut Vec<Found>) -> Result<Vec<Output>, git2::Error> {
     let mut moves: Vec<Output> = Vec::new();
     let mut map: HashMap<String, Found> = HashMap::new();
 
@@ -317,7 +332,7 @@ fn find_moves(repo: &Repository, old: &Commit, new: &Commit) -> Result<Vec<Outpu
 
             moves.push(output);
         } else {
-            map.insert(f.key.clone(), f);
+            map.insert(f.key.clone(), f.clone());
         }
     }
 
@@ -331,6 +346,8 @@ pub struct OutputSet {
     new: TransitOid,
     new_time: i64, // Seconds from Epoch
     outputs: Vec<Output>,
+    added_lines: u32,
+    deleted_lines: u32,
 }
 
 #[derive(Debug, RustcEncodable)]
