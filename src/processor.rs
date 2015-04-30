@@ -72,7 +72,7 @@ fn format_key(key: String) -> String {
 }
 
 // Tokenizes rust syntax into variables names.
-// Only variables names are guarenteed to be proper tokens,
+// Only variables names are guaranteed to be proper tokens,
 // other symbols like '->' will not be properly parsed.
 fn tokenize_rust_variables(str : String) -> Vec<String> {
 
@@ -157,7 +157,7 @@ fn tokenize_rust_variables(str : String) -> Vec<String> {
     token_vec
 }
 
-fn format_key_rust2(original_string: String) -> String {
+fn format_key_rust(original_string: String) -> String {
 
     #[derive(Debug, PartialEq, Eq)]
     enum State {
@@ -202,7 +202,6 @@ fn format_key_rust2(original_string: String) -> String {
             },
 
             State::ReadingLet => {
-                //if t == " " || t == "&" || t == "mut" 
                 match t.as_ref() {
                     " " | "&" | "mut" => {
                         key = format!("{}{}", key, t);
@@ -223,129 +222,6 @@ fn format_key_rust2(original_string: String) -> String {
     println!("the_key={:?}", key);
 
     key
-}
-
-fn format_key_rust(original_string: String) -> String {
-    //let mut new_key = String::new();
-    let mut scope = scope::Scope::new();
-    let trimmed = format_key(original_string);
-
-    println!("\n=============\ntrimmed={:?}", trimmed);
-    println!("{:?}", tokenize_rust_variables(trimmed.clone()));
-
-    return trimmed; // TODO
-
-    {
-        let mut index : usize = 0;
-        let rust_vars = regex!(r"let\s+(?P<mut>mut\s+)?\s*(?P<vars>[a-zA-Z0-09_\(\),\s]+)");
-        
-
-        // TODO Remove this after debugging. It hides extra output for debugging.
-        if !rust_vars.is_match(&trimmed[..]) {
-            return trimmed;
-        }
-
-        println!("\n==========\ntrimmed={:?}", trimmed);
-
-        for capture in rust_vars.captures_iter(&trimmed[..]) {
-
-            //println!("pos0: {:?}, pos1: {:?}, pos2: {:?}", capture.pos(0), capture.pos(1), capture.pos(2));
-
-            let whole_capture_start_pos = capture.pos(0).unwrap().0;
-            //let whole_capture_last_pos  = capture.pos(0).unwrap().1;
-
-            if index < whole_capture_start_pos {
-                let sliced = trimmed.slice_chars(index, whole_capture_start_pos);
-                //println!("leading sliced={:?}", sliced);
-                //new_key = format!("{}{}", new_key, sliced);
-                index = whole_capture_start_pos;
-
-                for c in sliced.chars() {
-                    if c == '{' {
-                        scope.increase_depth();
-                    }
-                    if c == '}' {
-                        scope.decrease_depth();
-                    }
-                }
-            }
-
-            let var_value = format!("{}", capture.name("vars").unwrap());   // TODO Trim
-            scope.add_variable(var_value.clone());
-            index = capture.pos(2).unwrap().1;  // capture.pos(0).unwrap().1;
-
-            // TODO Complex let statements.
-
-            //new_key = format!("{}let {}{} ", new_key, capture.name("mut").unwrap_or(""), var_value);
-        }
-
-        // Grab remainder of string.
-        //new_key = format!("{}{}", new_key, trimmed.slice_chars(index, trimmed.len()));
-
-        //println!("new_key={:?}", new_key);
-    }
-
-    scope.reset_depth();
-
-    // TODO If new_key isn't being used, it doesn't need to be made at all.
-
-
-    let mut final_key = String::new();
-
-    {
-
-        let tokens = tokenize_rust_variables(trimmed.clone());
-
-        for t in tokens {
-            if t == "{" {
-                scope.increase_depth();
-            }
-            if t == "}" {
-                scope.decrease_depth();
-            }
-
-            if let Some(var) = scope.get_variable(t.clone()) {
-                final_key = format!("{}{}", final_key, var);
-            } else {
-                final_key = format!("{}{}", final_key, t);
-            }
-        }
-/*
-        let mut chunk = String::new();
-        let mut index : usize = 0;
-
-        for c in trimmed.chars() {
-            if c == '{' {
-                scope.increase_depth();
-
-            } else if c == '}' {
-
-                let split_regex = regex!(r"(\s|=|\(|,)?(?P<var>[a-zA-B0-9_])+(\s|=|\)|;|,)?");
-
-                for capture in split_regex.captures_iter(&chunk[..]) {
-
-                    //println!("capture0={:?} 1={:?} 2={:?} var={:?}", capture.at(0), capture.at(1), capture.at(2), capture.name("var"));
-
-                    if let Some(var) = scope.get_variable(format!("{}", capture.at(2).unwrap())) {
-                        println!("******Found var={:?} original={:?}", var, capture.at(2).unwrap());
-
-                        
-
-                    }
-                }
-
-                final_key = format!("{}{}", final_key, chunk);
-                chunk = String::new();
-                scope.decrease_depth();
-
-            } else {
-                chunk.push(c.clone());
-            }
-        }
-*/
-    }
-
-    final_key
 }
 
 #[derive(Debug)]
@@ -373,8 +249,7 @@ fn which_key_format_function(delta : DiffDelta) -> (fn(String) -> String) {
 
     if let Some(ext) = oldpath.extension() {
         if ext == "rs" {
-            //return format_key_rust;
-            return format_key_rust2;
+            return format_key_rust;
         }
     }
 
