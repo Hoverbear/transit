@@ -4,6 +4,8 @@ use std::collections::HashMap;
 use std::fmt;
 use std::str;
 
+use scope;
+
 pub fn commits(repo: Repository, old_id: Oid, new_id: Oid) -> Result<OutputSet, git2::Error> {
     // Compare a specific commit pair.
     let old = repo.find_commit(old_id);
@@ -69,9 +71,13 @@ fn format_key(key: String) -> String {
     trim.replace_all(&result[..], "")
 }
 
-fn format_key_rust(key: String) -> String {
-    let trimmed = format_key(key);
+fn format_key_rust(original_string: String) -> String {
+    let mut new_key = String::new();
+    let mut scope = scope::Scope::new();
+
+    let trimmed = format_key(original_string);
     let rust_vars = regex!(r"let\s+(?P<mut>mut\s+)?\s*(?P<vars>[a-zA-Z0-09_\(\),\s]+)");
+    let mut index : usize = 0;
 
     // TODO Remove this after debugging. It hides extra output for debugging.
     if !rust_vars.is_match(&trimmed[..]) {
@@ -79,12 +85,6 @@ fn format_key_rust(key: String) -> String {
     }
 
     println!("\n==========\ntrimmed={:?}", trimmed);
-
-    let mut replacements: HashMap<String, String> = HashMap::new();
-
-    let mut new_key = String::new();
-    let mut count : u64 = 0;
-    let mut index : usize = 0;
 
     for capture in rust_vars.captures_iter(&trimmed[..]) {
 
@@ -98,45 +98,60 @@ fn format_key_rust(key: String) -> String {
             //println!("leading sliced={:?}", sliced);
             new_key = format!("{}{}", new_key, sliced);
             index = whole_capture_start_pos;
+
+            for c in sliced.chars() {
+                if c == '{' {
+                    scope.increase_depth();
+                }
+                if c == '}' {
+                    scope.decrease_depth();
+                }
+            }
         }
 
-        let var_key = format!("v{}", count);
         let var_value = format!("{}", capture.name("vars").unwrap());   // TODO Trim
-
+        scope.add_variable(var_value.clone());
         index = capture.pos(2).unwrap().1;
 
-        // If contains ( or ), ignore for now.
-        let rust_tuple = regex!(r"([a-zA-Z0-9_]+)(\s*,\s*)?");
-        /* Tuple vars
-        (a, b)
-        (Ok(a), Ok(b))
-        (
+        // TODO Complex let statements.
 
-        */
+        new_key = format!("{}let {}{} ", new_key, capture.name("mut").unwrap_or(""), var_value);
 
-        new_key = format!("{}let {}{} ", new_key, capture.name("mut").unwrap_or(""), var_key);
-
-/*
-        let var_capture_last_pos = capture.pos(2).unwrap().1;
-
-        let sliced = trimmed.slice_chars(var_capture_last_pos, whole_capture_last_pos);
-        println!("trailing sliced={:?}", sliced);
-        new_key = format!("{}{}", new_key, sliced);
-        index = whole_capture_last_pos;
-*/
-        replacements.insert(var_key, var_value);
-
-        // TODO Do replacements.
-
-        count += 1;
     }
 
     // Grab remainder of string.
     new_key = format!("{}{}", new_key, trimmed.slice_chars(index, trimmed.len()));
 
-    println!("new_key={:?}", new_key);
+    //println!("new_key={:?}", new_key);
 
-    new_key
+    scope.reset_depth();
+
+    // TODO If new_key isn't being used, it doesn't need to be made at all.
+
+    let mut chunk = String::new();
+    let mut final_key = String::new();
+
+    for c in trimmed.chars() {
+        if c == '{' {
+            scope.increase_depth();
+        } else if c == '}' {
+            let split_regex = regex!(r"(\s|=|\()?([a-zA-B0-9_])+(\s|=|\)|;)?");
+
+            for captures in split_regex.captures_iter(&chunk[..]) {
+                if let Some(var) = scope.get_variable(format!("{}", captures.at(2).unwrap())) {
+                    println!("Found var={:?} original={:?}", var, captures.at(2).unwrap());
+                }
+            }
+
+            final_key = format!("{}{}", final_key, chunk);
+            chunk = String::new();
+            scope.decrease_depth();
+        } else {
+            chunk.push(c.clone());
+        }
+    }
+
+    final_key
 }
 
 #[derive(Debug)]
