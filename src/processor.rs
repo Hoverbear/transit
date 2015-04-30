@@ -157,6 +157,8 @@ fn tokenize_rust_variables(str : String) -> Vec<String> {
     token_vec
 }
 
+// TODO This function assumes it is only parse a single function (or a portion
+//      of a single function.
 fn format_key_rust(original_string: String) -> String {
 
     #[derive(Debug, PartialEq, Eq)]
@@ -203,14 +205,19 @@ fn format_key_rust(original_string: String) -> String {
 
             State::ReadingLet => {
                 match t.as_ref() {
-                    " " | "&" | "mut" => {
+                    " " | "&" | "mut" | "Some" | "Ok" | "(" | ")" | "," => {
                         key = format!("{}{}", key, t);
                         continue;
                     },
+                    ":" | "=" => {
+                        key = format!("{}{}", key, t);
+                        state = State::Other;
+                        continue;
+                    }
                     _ => {
                         scope.add_variable(t.clone());
                         key = format!("{}{}", key, scope.get_variable(t.clone()).unwrap());
-                        state = State::Other;
+                        continue;
                     },
                 }
 
