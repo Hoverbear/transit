@@ -19,6 +19,7 @@ use std::path::Path;
 
 mod processor;
 mod web;
+mod scope;
 
 // Write the Docopt usage string.
 static USAGE: &'static str = "

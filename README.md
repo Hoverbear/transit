@@ -141,13 +141,16 @@ By [task and owner here](https://github.com/Hoverbear/transit/issues/6).
 
 ### Threats to Validity
 
-We don't track all possible code moves. Currently we only strip whitespace. Plans to include language support were lost due to being inaccurately told the deadline by @ycoady.
+We don't track all possible code moves. Currently we have two approaches:
 
-The moves we do detect may be false positives. This is expected due to the non-precise nature of dealing with diffs and the naivity of our algorithm.
+* For rust files, detect variable name changes with no other code changes. See [issue #14](https://github.com/Hoverbear/transit/issues/14) for discussion of accuracy.
+* For any other file type, strip whitespace.
+
+The moves we do detect may be false positives. This is expected due to the non-precise nature of dealing with diffs and the nativity of our algorithm.
 
 ### Future Work
 
-* Language Support (Pending @brodyholden)
+* Further Language Support (See [issue #13](https://github.com/Hoverbear/transit/issues/13) for discussion)
 * Streamed Results
 * More accurate results
 

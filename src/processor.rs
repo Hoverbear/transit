@@ -1,8 +1,10 @@
 use {git2, rustc_serialize};
-use git2::{Repository, Commit, Diff, DiffFormat, Oid};
+use git2::{Repository, Commit, Diff, DiffFormat, Oid, DiffDelta};
 use std::collections::HashMap;
 use std::fmt;
 use std::str;
+
+use scope;
 
 pub fn commits(repo: Repository, old_id: Oid, new_id: Oid) -> Result<OutputSet, git2::Error> {
     // Compare a specific commit pair.
@@ -85,10 +87,201 @@ enum FoundState {
 }
 
 fn format_key(key: String) -> String {
-    let remove_whitespace = regex!(r"\s{2,}"); // 2 or more whitespaces    // TODO Removes whitespace from a string.
+    let remove_whitespace = regex!(r"\s{2,}"); // 2 or more whitespaces
     let trim = regex!(r"^[\s]+|[\s]+$");
     let result = remove_whitespace.replace_all(&key[..], "");
     trim.replace_all(&result[..], "")
+}
+
+fn is_rust_punctuation_char(c: char) -> bool {
+    match c {
+        '{' | '}' | '(' | ')' | '[' | ']' | '<' | '>' |
+        '.' | ',' | ';' | ':' | '!' | '#' | ' ' | '-' => true,
+        _ => false
+    }
+}
+
+// Tokenizes rust syntax into variables names.
+// Only variables names are guaranteed to be proper tokens,
+// other symbols like '->' will not be properly parsed.
+fn tokenize_rust_variables(str : String) -> Vec<String> {
+
+    #[derive(Debug, PartialEq, Eq)]
+    enum State {
+        Start, Ident, Other, String
+    }
+
+    let mut state = State::Start;
+    let mut token_vec: Vec<String> = Vec::new();
+    let mut token = String::new();
+
+    for c in str.chars() {
+        match state {
+            State::Start => {
+                token.push(c.clone());
+                if is_rust_punctuation_char(c) {
+                    state = State::Other;
+                } else if c == '"' {
+                    state = State::String;
+                } else {
+                    state = State::Ident;
+                }
+            },
+            State::Ident => {
+                if is_rust_punctuation_char(c) {
+                    token_vec.push(token);
+                    token = String::new();
+                    token.push(c.clone());
+                    state = State::Other;
+                } else if c == '"' {
+                    token_vec.push(token);
+                    token = String::new();
+                    token.push(c.clone());
+                    state = State::String;
+                } else {
+                    token.push(c.clone());
+                    state = State::Ident;
+                }
+            },
+            State::String => {
+                if c == '"' {
+                    if let Some(last) = token.pop() {
+                        if last == '\\' {
+                            token.push(last);
+                            token.push(c.clone());
+                            state = State::String;
+                        } else {
+                            token.push(last);
+                            token.push(c.clone());
+                            token_vec.push(token);
+                            token = String::new();
+                            state = State::Start; // TODO??
+                        }
+                    } else {
+                        unreachable!("Parsing a string. Found an ending quote but token is otherwise empty.");
+                    }
+                } else {
+                    token.push(c.clone());
+                    state = State::String;
+                }
+            },
+            State::Other => {
+                if is_rust_punctuation_char(c) {
+/*
+                    // TODO Ideally :: and -> would not be separate tokens.
+                    if let Some(last) = token.pop() {
+                        if last == ':' && c == ':' {
+                            token.push(last);
+                            token.push(c.clone());
+                            token_vec.push(token);
+                            token = String::new();
+                        } else if last == '-' && c == '>' {
+                            token.push(last);
+                            token.push(c.clone());
+                            token_vec.push(token);
+                            token = String::new();
+                        } else {
+                            token_vec.push(token);
+                            token = String::new();
+                            token.push(c.clone());
+                        }
+                    } else {
+*/
+                        token_vec.push(token);
+                        token = String::new();
+                        token.push(c.clone());
+                  //  }
+                    state = State::Other;
+                } else if c == '"' {
+                    token_vec.push(token);
+                    token = String::new();
+                    token.push(c.clone());
+                    state = State::String;
+                } else {
+                    token_vec.push(token);
+                    token = String::new();
+                    token.push(c.clone());
+                    state = State::Ident;
+                }
+            },
+        }
+    }
+
+    if !token.is_empty() {
+        token_vec.push(token);
+    }
+
+    token_vec
+}
+
+// TODO This function assumes it is only parse a single function (or a portion
+//      of a single function.
+fn format_key_rust(original_string: String) -> String {
+
+    #[derive(Debug, PartialEq, Eq)]
+    enum State {
+        Other, ReadingLet
+    }
+
+    let trimmed = format_key(original_string);
+    let tokens = tokenize_rust_variables(trimmed);
+
+    let mut scope = scope::Scope::new();
+    let mut key = String::new();
+    let mut state = State::Other;
+
+    for t in tokens {
+
+        match state {
+            State::Other => {
+                if t == "{" {
+                    scope.increase_depth();
+                    key = format!("{}{}", key, t);
+                    continue;
+                }
+                if t == "}" {
+                    scope.decrease_depth();
+                    key = format!("{}{}", key, t);
+                    continue;
+                }
+                if t == "let" {
+                    key = format!("{}{}", key, t);
+                    state = State::ReadingLet;
+                    continue;
+                }
+                if let Some(var) = scope.get_variable(t.clone()) {
+                    key = format!("{}{}", key, var);
+                    continue;
+                } else {
+                    key = format!("{}{}", key, t);
+                    continue;
+                }
+            },
+
+            State::ReadingLet => {
+                match t.as_ref() {
+                    " " | "&" | "mut" | "Some" | "Ok" | "Err" | "(" | ")" | "," => {
+                        key = format!("{}{}", key, t);
+                        continue;
+                    },
+                    ":" | "=" => {
+                        key = format!("{}{}", key, t);
+                        state = State::Other;
+                        continue;
+                    }
+                    _ => {
+                        scope.add_variable(t.clone());
+                        key = format!("{}{}", key, scope.get_variable(t.clone()).unwrap());
+                        continue;
+                    },
+                }
+
+            },
+
+        }
+    }
+
+    key
 }
 
 #[derive(Debug, Clone)]
@@ -103,6 +296,24 @@ struct Found {
 #[derive(Debug)]
 enum State {
     Other, Addition, Deletion
+}
+
+fn which_key_format_function(delta : DiffDelta) -> (fn(String) -> String) {
+    let oldpath = delta.old_file().path().unwrap(); // TODO Do additions have old files?
+    let newpath = delta.new_file().path().unwrap(); // TODO Do deletions have new files?
+
+    if oldpath.extension() != newpath.extension() {
+        println!("File extensions are different.");
+        return format_key;
+    }
+
+    if let Some(ext) = oldpath.extension() {
+        if ext == "rs" {
+            return format_key_rust;
+        }
+    }
+
+    return format_key;
 }
 
 fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
@@ -151,6 +362,8 @@ fn find_additions_and_deletions(diff: Diff) -> Vec<Found> {
             Some(path) => String::from_str(path),
             None => return false,
         };
+
+        let format_key = which_key_format_function(delta);
 
         match line.origin() {
             // Additions
