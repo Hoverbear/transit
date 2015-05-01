@@ -71,6 +71,14 @@ fn format_key(key: String) -> String {
     trim.replace_all(&result[..], "")
 }
 
+fn is_rust_punctuation_char(c: char) -> bool {
+    match c {
+        '{' | '}' | '(' | ')' | '[' | ']' | '<' | '>' |
+        '.' | ',' | ';' | ':' | '!' | '#' | ' ' | '-' => true,
+        _ => false
+    }
+}
+
 // Tokenizes rust syntax into variables names.
 // Only variables names are guaranteed to be proper tokens,
 // other symbols like '->' will not be properly parsed.
@@ -78,74 +86,101 @@ fn tokenize_rust_variables(str : String) -> Vec<String> {
 
     #[derive(Debug, PartialEq, Eq)]
     enum State {
-        Start, Ident, Other
+        Start, Ident, Other, String
     }
 
     let mut state = State::Start;
     let mut token_vec: Vec<String> = Vec::new();
     let mut token = String::new();
 
-    //let mut last_char: char = ' ';
-
     for c in str.chars() {
-        match c {
-            // Other
-            '{' | '}' | '(' | ')' | '[' | ']' | '<' | '>' |
-            '.' | ',' | ';' | ':' | '!' | '#' | ' ' | '-' => {
-                match state {
-                    State::Start => {
-                        token.push(c.clone());
-                    },
-                    State::Ident => {
-                        token_vec.push(token);
-                        token = String::new();
-                        token.push(c.clone());
-                    },
-                    State::Other => {
-
-                        // If
-                        //  last is '-' and curr is '>'
-                        // or
-                        //  last is ':' and curr is ':'
-                        /*
-                        if let Some(last) = token.pop() {
-                            if last == ':' && c == ':' {
-                                token.push(last);
-                                token.push(c.clone());
-                            } else if last == '-' && c == '>' {
-                                token.push(last);
-                                token.push(c.clone());
-                            } else {
-                                token_vec.push(token);
-                                token = String::new();
-                                token.push(c.clone());
-                            }
+        match state {
+            State::Start => {
+                token.push(c.clone());
+                if is_rust_punctuation_char(c) {
+                    state = State::Other;
+                } else if c == '"' {
+                    state = State::String;
+                } else {
+                    state = State::Ident;
+                }
+            },
+            State::Ident => {
+                if is_rust_punctuation_char(c) {
+                    token_vec.push(token);
+                    token = String::new();
+                    token.push(c.clone());
+                    state = State::Other;
+                } else if c == '"' {
+                    token_vec.push(token);
+                    token = String::new();
+                    token.push(c.clone());
+                    state = State::String;
+                } else {
+                    token.push(c.clone());
+                    state = State::Ident;
+                }
+            },
+            State::String => {
+                if c == '"' {
+                    if let Some(last) = token.pop() {
+                        if last == '\\' {
+                            token.push(last);
+                            token.push(c.clone());
+                            state = State::String;
                         } else {
-*/
+                            token.push(last);
+                            token.push(c.clone());
+                            token_vec.push(token);
+                            token = String::new();
+                            state = State::Start; // TODO??
+                        }
+                    } else {
+                        unreachable!("Parsing a string. Found an ending quote but token is otherwise empty.");
+                    }
+                } else {
+                    token.push(c.clone());
+                    state = State::String;
+                }
+            },
+            State::Other => {
+                if is_rust_punctuation_char(c) {
+/*
+                    // TODO Ideally :: and -> would not be separate tokens.
+                    if let Some(last) = token.pop() {
+                        if last == ':' && c == ':' {
+                            token.push(last);
+                            token.push(c.clone());
+                            token_vec.push(token);
+                            token = String::new();
+                        } else if last == '-' && c == '>' {
+                            token.push(last);
+                            token.push(c.clone());
+                            token_vec.push(token);
+                            token = String::new();
+                        } else {
                             token_vec.push(token);
                             token = String::new();
                             token.push(c.clone());
-  //                      }
-                    },
-                }
-                state = State::Other;
-            },
-            // Indent
-            _ => {
-                match state {
-                    State::Start => {
-                        token.push(c.clone());
-                    },
-                    State::Ident => {
-                        token.push(c.clone());
-                    },
-                    State::Other => {
+                        }
+                    } else {
+*/
                         token_vec.push(token);
                         token = String::new();
                         token.push(c.clone());
-                    },
+                  //  }
+                    state = State::Other;
+                } else if c == '"' {
+                    token_vec.push(token);
+                    token = String::new();
+                    token.push(c.clone());
+                    state = State::String;
+                } else {
+                    token_vec.push(token);
+                    token = String::new();
+                    token.push(c.clone());
+                    state = State::Ident;
                 }
-                state = State::Ident;
             },
         }
     }
@@ -168,9 +203,12 @@ fn format_key_rust(original_string: String) -> String {
 
     let trimmed = format_key(original_string);
 
-    println!("\n==========\ntrimmed={:?}", trimmed.clone());
+    //println!("\n==========\ntrimmed={}", trimmed.clone());
 
     let tokens = tokenize_rust_variables(trimmed);
+
+    //println!("tokens={:?}", tokens);
+
     let mut scope = scope::Scope::new();
     let mut key = String::new();
     let mut state = State::Other;
@@ -205,7 +243,7 @@ fn format_key_rust(original_string: String) -> String {
 
             State::ReadingLet => {
                 match t.as_ref() {
-                    " " | "&" | "mut" | "Some" | "Ok" | "(" | ")" | "," => {
+                    " " | "&" | "mut" | "Some" | "Ok" | "Err" | "(" | ")" | "," => {
                         key = format!("{}{}", key, t);
                         continue;
                     },
@@ -226,7 +264,7 @@ fn format_key_rust(original_string: String) -> String {
         }
     }
 
-    println!("the_key={:?}", key);
+    //println!("the_key={}", key);
 
     key
 }
