@@ -202,12 +202,7 @@ fn format_key_rust(original_string: String) -> String {
     }
 
     let trimmed = format_key(original_string);
-
-    //println!("\n==========\ntrimmed={}", trimmed.clone());
-
     let tokens = tokenize_rust_variables(trimmed);
-
-    //println!("tokens={:?}", tokens);
 
     let mut scope = scope::Scope::new();
     let mut key = String::new();
@@ -263,8 +258,6 @@ fn format_key_rust(original_string: String) -> String {
 
         }
     }
-
-    //println!("the_key={}", key);
 
     key
 }
